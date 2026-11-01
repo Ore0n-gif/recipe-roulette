@@ -1447,11 +1447,28 @@ function renderFilters() {
   renderIdeaFilters();
 }
 
+// Recipes you've seen lately sit out until most of the others have had a turn, even after closing the app.
+let recent = store.get('rr.recent', []);
+function remember(r) {
+  if (!r || r.src === 'idea') return;
+  recent = recent.filter(k => k !== key(r)).concat(key(r)).slice(-300);
+  store.set('rr.recent', recent);
+}
+
 function shuffle() {
   const p = pool();
   if (!p.length) { showRecipe(null); return; }
-  const choices = p.length > 1 && current ? p.filter(r => key(r) !== key(current)) : p;
-  showRecipe(choices[Math.floor(Math.random() * choices.length)]);
+  const inPool = new Set(p.map(key));
+  const seen = recent.filter(k => inPool.has(k));
+  const skip = new Set(seen.slice(-Math.max(1, Math.floor(p.length * 0.7))));
+  if (current) skip.add(key(current));
+  const fresh = p.filter(r => !skip.has(key(r)));
+  // If the filters leave nothing new, take whichever recipe you saw longest ago.
+  const oldest = () => p.slice().sort((a, b) => seen.indexOf(key(a)) - seen.indexOf(key(b)))
+    .find(r => p.length === 1 || !current || key(r) !== key(current));
+  const pick = fresh.length ? fresh[Math.floor(Math.random() * fresh.length)] : oldest();
+  showRecipe(pick);
+  remember(pick);
   const slot = $('#card-slot');
   if (slot.getBoundingClientRect().top < 0) slot.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
 }
