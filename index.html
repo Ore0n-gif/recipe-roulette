@@ -8,50 +8,47 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Recipes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#F6F7F5" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0F1311" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F4F4F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E0E0E" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap">
 <style>
-/* Layout: one clean column of picture cards; a thumb-height Shuffle + New idea dock fixed to the bottom. */
+/* Layout: Swiss brutalist. One column of hard-edged cards with black rules and offset shadows; Shuffle + New idea docked at the bottom. */
 :root {
-  --bg: #F6F7F5;
+  --bg: #F4F4F0;
   --surface: #FFFFFF;
-  --surface-2: #EEF1ED;
-  --ink: #16201A;
-  --muted: #5E6A63;
-  --line: #E2E7E1;
-  --primary: #14804A;
-  --on-primary: #FFFFFF;
-  --primary-soft: #E2F3E8;
-  --accent: #F0544F;
-  --danger: #C62828;
-  --shadow: rgb(22 32 26 / .06);
-  --shadow-strong: rgb(22 32 26 / .14);
-  --glow: rgb(20 128 74 / .28);
-  --c-breakfast: #F9E3A1; --d-breakfast: #E5B12A;
-  --c-lunch: #C8EBD5;     --d-lunch: #36B06A;
-  --c-dinner: #FAD3C6;    --d-dinner: #EC7550;
-  --c-dessert: #E2D8FB;   --d-dessert: #9677E8;
-  --c-snack: #CCE4F8;     --d-snack: #4498DC;
-  --on-pastel: #16201A;
-  --font: "Plus Jakarta Sans", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --surface-2: #EBEBE4;
+  --ink: #0A0A0A;
+  --muted: #55554F;
+  --line: rgb(10 10 10 / .16);
+  --yellow: #FFE600;
+  --on-yellow: #0A0A0A;
+  --hard: #0A0A0A;
+  --sel-bg: #0A0A0A;
+  --sel-fg: #FFE600;
+  --danger: #D32F2F;
+  --c-breakfast: #FFD43B;
+  --c-lunch: #8CE99A;
+  --c-dinner: #FFA8A8;
+  --c-dessert: #D0BFFF;
+  --c-snack: #A5D8FF;
+  --on-pastel: #0A0A0A;
+  --rule: 2px solid var(--ink);
+  --font: "Space Grotesk", "Helvetica Neue", Arial, system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0F1311; --surface: #181D1A; --surface-2: #232A26; --ink: #EDF2EE; --muted: #A2ADA6;
-    --line: #2B332E; --primary: #3DD68C; --on-primary: #08160F; --primary-soft: #173A29; --accent: #FF7A72;
-    --danger: #FF8A80; --shadow: rgb(0 0 0 / .3); --shadow-strong: rgb(0 0 0 / .5); --glow: rgb(0 0 0 / .5); color-scheme: dark;
+    --bg: #0E0E0E; --surface: #171717; --surface-2: #232323; --ink: #F4F4F0; --muted: #A9A9A2;
+    --line: rgb(244 244 240 / .18); --hard: #FFE600; --sel-bg: #FFE600; --sel-fg: #0A0A0A; --danger: #FF6B6B; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0F1311; --surface: #181D1A; --surface-2: #232A26; --ink: #EDF2EE; --muted: #A2ADA6;
-  --line: #2B332E; --primary: #3DD68C; --on-primary: #08160F; --primary-soft: #173A29; --accent: #FF7A72;
-  --danger: #FF8A80; --shadow: rgb(0 0 0 / .3); --shadow-strong: rgb(0 0 0 / .5); --glow: rgb(0 0 0 / .5); color-scheme: dark;
+  --bg: #0E0E0E; --surface: #171717; --surface-2: #232323; --ink: #F4F4F0; --muted: #A9A9A2;
+  --line: rgb(244 244 240 / .18); --hard: #FFE600; --sel-bg: #FFE600; --sel-fg: #0A0A0A; --danger: #FF6B6B; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -62,7 +59,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 16.5px/1.55 var(--font);
+  font: 16px/1.5 var(--font);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: env(safe-area-inset-top, 0px) 150px;
@@ -70,152 +67,156 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
 }
-.app, .view { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; width: 100%; }
+.app, .view { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; width: 100%; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.caps { text-transform: uppercase; letter-spacing: .04em; }
 
 /* Header */
-.top { padding-block: 16px 4px; display: flex; flex-direction: column; gap: 18px; }
-.headrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.brandrow { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.logo { flex: none; width: 36px; height: 36px; border-radius: 11px; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; }
-.logo svg { width: 21px; height: 21px; }
-.brand { font-weight: 800; font-size: 1.08rem; line-height: 1; letter-spacing: -0.02em; margin: 0; }
-.greet { display: flex; flex-direction: column; gap: 4px; }
-.hello { margin: 0; font-weight: 800; font-size: clamp(1.55rem, 6.6vw, 1.95rem); line-height: 1.15; letter-spacing: -0.035em; text-wrap: balance; }
-.tally { margin: 0; font-size: .92rem; color: var(--muted); }
-.gear { flex: none; width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: grid; place-items: center; }
+.top { padding-block: 14px 2px; display: flex; flex-direction: column; gap: 16px; }
+.headrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-bottom: 12px; border-bottom: var(--rule); }
+.brand { font-weight: 700; font-size: 2.15rem; line-height: .9; letter-spacing: -0.05em; text-transform: uppercase; margin: 0; }
+.greet { display: flex; flex-direction: column; gap: 6px; }
+.hello { margin: 0; font-weight: 700; font-size: clamp(1.3rem, 5.6vw, 1.6rem); line-height: 1.1; letter-spacing: -0.03em; text-transform: uppercase; text-wrap: balance; }
+.tally { margin: 0; font-size: .8rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.gear { flex: none; width: 44px; height: 44px; border: var(--rule); border-radius: 0; background: var(--surface); color: var(--ink); display: grid; place-items: center; }
 .gear svg { width: 20px; height: 20px; }
-.gear[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 8px 24px var(--shadow); display: flex; flex-direction: column; gap: 14px; }
-.panel h3 { margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; }
+.gear[aria-pressed="true"] { background: var(--yellow); color: var(--on-yellow); border-color: var(--ink); }
+.panel { background: var(--surface); border: var(--rule); padding: 18px; box-shadow: 5px 5px 0 var(--hard); display: flex; flex-direction: column; gap: 14px; }
+.panel h3 { margin: 0; font-size: 1.05rem; font-weight: 700; text-transform: uppercase; letter-spacing: -0.01em; }
 .panel p { margin: 0; }
 .keyrow { display: flex; gap: 8px; }
 .keyrow input { flex: 1; min-width: 0; font-family: ui-monospace, Menlo, monospace; font-size: 15px; }
-.ok { color: var(--primary); font-weight: 700; }
-.panel a { color: var(--primary); font-weight: 700; }
-.tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 14px; }
-.tab { border: 0; background: transparent; padding: 9px 6px; border-radius: 11px; font-weight: 700; font-size: .92rem; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
-.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px var(--shadow-strong); }
-.count { font-size: .72rem; font-weight: 700; background: var(--primary-soft); color: var(--primary); border-radius: 99px; padding: 1px 7px; font-variant-numeric: tabular-nums; }
+.ok { font-weight: 700; background: var(--yellow); color: var(--on-yellow); padding: 0 4px; }
+.panel a { color: inherit; font-weight: 700; text-decoration-thickness: 2px; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; border: var(--rule); background: var(--surface); }
+.tab { border: 0; border-right: var(--rule); background: transparent; padding: 10px 6px; font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+.tab:last-child { border-right: 0; }
+.tab[aria-selected="true"] { background: var(--sel-bg); color: var(--sel-fg); }
+.count { font-size: .72rem; font-weight: 700; background: var(--yellow); color: var(--on-yellow); padding: 0 6px; font-variant-numeric: tabular-nums; }
 
 /* Filters */
 .filters { display: flex; flex-direction: column; gap: 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { border: 1px solid var(--line); background: var(--surface); padding: 7px 14px; border-radius: 99px; font-size: .88rem; font-weight: 600; color: var(--ink); display: inline-flex; align-items: center; gap: 7px; }
-.chip .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--dot); }
-.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-.cat-Breakfast { --pastel: var(--c-breakfast); --dot: var(--d-breakfast); }
-.cat-Lunch { --pastel: var(--c-lunch); --dot: var(--d-lunch); }
-.cat-Dinner { --pastel: var(--c-dinner); --dot: var(--d-dinner); }
-.cat-Dessert { --pastel: var(--c-dessert); --dot: var(--d-dessert); }
-.cat-Snack { --pastel: var(--c-snack); --dot: var(--d-snack); }
+.chip { border: var(--rule); background: var(--surface); padding: 6px 11px; border-radius: 0; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink); display: inline-flex; align-items: center; gap: 7px; }
+.chip .dot { width: 10px; height: 10px; flex: none; background: var(--pastel); border: 1.5px solid currentColor; }
+.chip[aria-pressed="true"] { background: var(--yellow); color: var(--on-yellow); border-color: var(--ink); }
+.cat-Breakfast { --pastel: var(--c-breakfast); }
+.cat-Lunch { --pastel: var(--c-lunch); }
+.cat-Dinner { --pastel: var(--c-dinner); }
+.cat-Dessert { --pastel: var(--c-dessert); }
+.cat-Snack { --pastel: var(--c-snack); }
 
 /* Idea panel */
-.idea { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 8px 24px var(--shadow); }
-.idea label { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.015em; }
+.idea { background: var(--surface); border: var(--rule); padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 5px 5px 0 var(--hard); }
+.idea label { font-weight: 700; font-size: 1.05rem; text-transform: uppercase; letter-spacing: -0.01em; }
 .idea .note { margin: 0; }
 .row-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-.thinking { display: flex; align-items: center; gap: 10px; font-weight: 600; }
-.spinner { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--primary-soft); border-top-color: var(--primary); animation: spin .8s linear infinite; flex: none; }
+.thinking { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.spinner { width: 16px; height: 16px; background: var(--yellow); border: var(--rule); animation: spin 1s steps(4) infinite; flex: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Recipe card */
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; box-shadow: 0 1px 2px var(--shadow), 0 12px 32px var(--shadow); animation: deal .3s ease-out; }
-@keyframes deal { from { transform: translateY(10px); opacity: .6; } to { transform: none; opacity: 1; } }
-.hero { position: relative; aspect-ratio: 16 / 10; max-width: 100%; background: var(--surface-2); }
+.card { background: var(--surface); border: var(--rule); box-shadow: 6px 6px 0 var(--hard); animation: deal .25s ease-out; margin-right: 6px; }
+@keyframes deal { from { transform: translate(6px, 6px); box-shadow: 0 0 0 var(--hard); } to { transform: none; } }
+.hero { position: relative; aspect-ratio: 16 / 10; max-width: 100%; background: var(--surface-2); border-bottom: var(--rule); overflow: hidden; }
 .hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.badge { position: absolute; top: 12px; left: 12px; background: rgb(255 255 255 / .88); color: #16201A; font-size: .76rem; font-weight: 700; padding: 5px 11px; border-radius: 99px; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
-.badge.idea-badge { background: var(--primary); color: var(--on-primary); }
-.credit { position: absolute; right: 8px; bottom: 8px; max-width: calc(100% - 16px); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; background: rgb(0 0 0 / .45); color: #fff; font-size: .68rem; font-weight: 500; padding: 2px 8px; border-radius: 99px; text-decoration: none; }
-.card-body { padding: 20px 18px 22px; display: flex; flex-direction: column; gap: 20px; }
-.pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.pill { font-size: .78rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; background: var(--surface-2); color: var(--ink); }
+.badge { position: absolute; top: 0; left: 0; background: var(--sel-bg); color: var(--sel-fg); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 5px 10px; }
+.badge.idea-badge { background: var(--yellow); color: var(--on-yellow); border-right: var(--rule); border-bottom: var(--rule); }
+.credit { position: absolute; right: 0; bottom: 0; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; background: #0A0A0A; color: #F4F4F0; font-size: .66rem; font-weight: 500; padding: 2px 8px; text-decoration: none; }
+.card-body { padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 18px; }
+.pills { display: flex; flex-wrap: wrap; gap: 0; font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.pill { padding: 3px 8px; border: var(--rule); margin: 0 -2px 0 0; background: var(--surface); color: var(--ink); }
 .pill.cat { background: var(--pastel); color: var(--on-pastel); }
-.pill.own { background: var(--primary-soft); color: var(--primary); }
-.title { font-weight: 800; font-size: clamp(1.6rem, 7vw, 2.1rem); line-height: 1.1; letter-spacing: -0.035em; margin: -8px 0 0; text-wrap: balance; overflow-wrap: anywhere; }
-.save-idea { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--primary-soft); border-radius: 16px; padding: 12px 14px; }
-.save-idea p { margin: 0; flex: 1 1 200px; font-weight: 600; font-size: .92rem; }
-.servings { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: var(--surface-2); border-radius: 16px; padding: 6px 6px 6px 14px; }
-.servings .lbl { font-weight: 700; font-size: .92rem; }
-.stepper { display: flex; align-items: center; gap: 4px; }
-.stepper button { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-size: 1.35rem; font-weight: 600; line-height: 1; color: var(--ink); }
-.stepper button:disabled { opacity: .4; cursor: default; }
-.stepper output { min-width: 6em; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pill.own { background: var(--yellow); color: var(--on-yellow); }
+.title { font-weight: 700; font-size: clamp(1.6rem, 7.2vw, 2.15rem); line-height: 1; letter-spacing: -0.04em; text-transform: uppercase; margin: -4px 0 0; text-wrap: balance; overflow-wrap: anywhere; hyphens: auto; }
+.save-idea { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--yellow); color: var(--on-yellow); border: var(--rule); border-color: #0A0A0A; padding: 12px 14px; }
+.save-idea p { margin: 0; flex: 1 1 200px; font-weight: 500; font-size: .92rem; }
+.save-idea .btn.primary { background: #0A0A0A; color: var(--yellow); border-color: #0A0A0A; }
+.servings { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border: var(--rule); padding: 0 0 0 12px; }
+.servings .lbl { font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+.stepper { display: flex; align-items: stretch; }
+.stepper button { width: 42px; height: 42px; border: 0; border-left: var(--rule); border-radius: 0; background: var(--surface); font-size: 1.35rem; font-weight: 500; line-height: 1; color: var(--ink); }
+.stepper button:active { background: var(--yellow); color: var(--on-yellow); }
+.stepper button:disabled { opacity: .35; cursor: default; }
+.stepper output { min-width: 6.2em; display: grid; place-items: center; border-left: var(--rule); font-weight: 700; font-size: .92rem; text-transform: uppercase; font-variant-numeric: tabular-nums; }
 .sec { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.sec h3 { margin: 0; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.015em; }
-.scale-note { margin: 0; font-size: .86rem; color: var(--muted); }
+.sec h3 { margin: 0; font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; padding-bottom: 6px; border-bottom: var(--rule); }
+.scale-note { margin: 0; font-size: .82rem; color: var(--muted); }
 .ings { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.ings label { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; cursor: pointer; }
+.ings label { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; cursor: pointer; }
 .ings li:last-child label { border-bottom: 0; }
-.ings input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--primary); flex: none; }
-.ings input:checked + span { text-decoration: line-through; color: var(--muted); }
+.ings input { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; margin: 1px 0 0; border: var(--rule); background: var(--surface); flex: none; display: grid; place-items: center; }
+.ings input:checked { background: var(--yellow); }
+.ings input:checked::after { content: ''; width: 9px; height: 5px; border-left: 2.5px solid #0A0A0A; border-bottom: 2.5px solid #0A0A0A; transform: rotate(-45deg) translate(1px, -1px); }
+.ings input:checked + span { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--muted); }
 .ings .qty { font-weight: 700; }
 .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 14px; }
-.steps li { counter-increment: step; display: grid; grid-template-columns: 30px 1fr; gap: 12px; overflow-wrap: anywhere; }
-.steps li::before { content: counter(step); font-weight: 700; font-size: .85rem; color: var(--primary); background: var(--primary-soft); border-radius: 50%; width: 28px; height: 28px; display: grid; place-items: center; }
-.notes { margin: 0; background: var(--surface-2); border-radius: 14px; padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 34px 1fr; gap: 10px; overflow-wrap: anywhere; }
+.steps li::before { content: counter(step, decimal-leading-zero); font-weight: 700; font-size: .8rem; color: var(--on-yellow); background: var(--yellow); border: var(--rule); border-color: #0A0A0A; height: 26px; display: grid; place-items: center; }
+.notes { margin: 0; border-left: 6px solid var(--yellow); background: var(--surface-2); padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .card-foot { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* Buttons */
-.btn { border: 1px solid transparent; background: var(--surface-2); color: var(--ink); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: .92rem; display: inline-flex; align-items: center; gap: 6px; }
-.btn.primary { background: var(--primary); color: var(--on-primary); }
-.btn[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); }
-.btn.small { padding: 7px 12px; font-size: .85rem; border-radius: 10px; }
-.btn.danger { color: var(--danger); }
-.btn:disabled { opacity: .55; cursor: default; }
+.btn { border: var(--rule); border-radius: 0; background: var(--surface); color: var(--ink); padding: 9px 14px; font-weight: 700; font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; display: inline-flex; align-items: center; gap: 6px; }
+.btn:active { transform: translate(2px, 2px); }
+.btn.primary { background: var(--ink); color: var(--bg); }
+.btn[aria-pressed="true"] { background: var(--yellow); color: var(--on-yellow); border-color: var(--ink); }
+.btn.small { padding: 6px 10px; font-size: .74rem; }
+.btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.btn:disabled { opacity: .45; cursor: default; transform: none; }
 
 /* Empty states */
-.empty { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 28px 22px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; box-shadow: 0 8px 24px var(--shadow); }
-.empty h2 { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+.empty { background: var(--surface); border: var(--rule); padding: 24px 20px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; box-shadow: 6px 6px 0 var(--hard); }
+.empty h2 { font-size: 1.3rem; font-weight: 700; text-transform: uppercase; letter-spacing: -0.03em; line-height: 1.05; margin: 0; }
 .empty p { margin: 0; color: var(--muted); }
 
 /* My recipes */
-.sectionhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.sectionhead h2 { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -0.035em; }
-.list { list-style: none; margin: 0; padding: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 8px 24px var(--shadow); }
+.sectionhead { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; border-bottom: var(--rule); padding-bottom: 8px; }
+.sectionhead h2 { font-size: 1.7rem; font-weight: 700; margin: 0; letter-spacing: -0.045em; line-height: .95; text-transform: uppercase; }
+.list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: var(--rule); box-shadow: 5px 5px 0 var(--hard); }
 .list:empty { display: none; }
-.row { display: flex; gap: 12px; align-items: center; padding: 8px; border-bottom: 1px solid var(--line); }
+.row { display: flex; gap: 12px; align-items: center; padding: 10px; border-bottom: var(--rule); }
 .row:last-child { border-bottom: 0; }
 .row-main { flex: 1; min-width: 0; border: 0; background: none; text-align: left; padding: 0; display: flex; align-items: center; gap: 12px; }
-.thumb { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; flex: none; background: var(--surface-2); }
+.thumb { width: 56px; height: 56px; object-fit: cover; flex: none; background: var(--surface-2); border: var(--rule); }
 .row-text { display: flex; flex-direction: column; min-width: 0; }
-.row-title { font-weight: 700; overflow-wrap: anywhere; }
-.row-meta { font-size: .82rem; color: var(--muted); }
+.row-title { font-weight: 700; text-transform: uppercase; letter-spacing: -0.01em; line-height: 1.15; overflow-wrap: anywhere; }
+.row-meta { font-size: .74rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .row-actions { display: flex; gap: 6px; flex: none; flex-wrap: wrap; justify-content: flex-end; }
-.note { font-size: .9rem; color: var(--muted); margin: 0; }
+.note { font-size: .88rem; color: var(--muted); margin: 0; }
 
 /* Form */
-form { display: flex; flex-direction: column; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 8px 24px var(--shadow); }
+form { display: flex; flex-direction: column; gap: 16px; background: var(--surface); border: var(--rule); padding: 18px; box-shadow: 5px 5px 0 var(--hard); }
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.field > label, .flabel { font-weight: 700; font-size: .93rem; }
-.field small { color: var(--muted); font-size: .84rem; font-weight: 500; }
+.field > label, .flabel { font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; }
+.field small { color: var(--muted); font-size: .82rem; font-weight: 400; text-transform: none; letter-spacing: 0; }
 .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
 input[type="text"], input[type="number"], input[type="password"], select, textarea {
-  width: 100%; font-size: 16px; padding: 11px 13px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg);
+  width: 100%; font-size: 16px; padding: 10px 12px; border-radius: 0; border: var(--rule); background: var(--surface);
 }
 input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus, select:focus, textarea:focus {
-  outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft);
+  outline: none; box-shadow: 4px 4px 0 var(--yellow);
 }
 textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
 /* Import */
 .import { display: block; }
 .import summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .import summary::-webkit-details-marker { display: none; }
-.import summary::after { content: '+'; font-size: 1.5rem; font-weight: 600; line-height: 1; color: var(--primary); }
-.import[open] summary::after { content: '−'; }
+.import summary::after { content: '+'; flex: none; width: 28px; height: 28px; display: grid; place-items: center; border: var(--rule); font-size: 1.2rem; font-weight: 700; line-height: 1; }
+.import[open] summary::after { content: '−'; background: var(--yellow); color: var(--on-yellow); border-color: var(--ink); }
 .import summary h3 { margin: 0; }
 .import-body { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
 .import-body textarea { min-height: 90px; }
 .shots { display: flex; flex-wrap: wrap; gap: 10px; }
 .shots:empty { display: none; }
 .shot { position: relative; }
-.shot img { width: 68px; height: 92px; object-fit: cover; border-radius: 10px; display: block; border: 1px solid var(--line); }
-.shot button { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg); font-size: .95rem; line-height: 1; display: grid; place-items: center; }
+.shot img { width: 68px; height: 92px; object-fit: cover; display: block; border: var(--rule); }
+.shot button { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border: var(--rule); border-radius: 0; background: var(--yellow); color: #0A0A0A; font-size: .95rem; font-weight: 700; line-height: 1; display: grid; place-items: center; }
 .photo-pick { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.photo-pick img { width: 96px; height: 72px; object-fit: cover; border-radius: 12px; }
+.photo-pick img { width: 96px; height: 72px; object-fit: cover; border: var(--rule); }
 .error { color: var(--danger); font-weight: 700; margin: 0; }
 
 /* Dock + toast */
@@ -225,29 +226,28 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
   padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  background: linear-gradient(to bottom, transparent, var(--bg) 42%);
+  background: linear-gradient(to bottom, transparent, var(--bg) 45%);
   pointer-events: none;
 }
-.dock-inner { max-width: 560px; margin: 0 auto; display: flex; gap: 10px; pointer-events: auto; }
+.dock-inner { max-width: 560px; margin: 0 auto; display: flex; pointer-events: auto; border: 2px solid #0A0A0A; box-shadow: 5px 5px 0 var(--hard); margin-right: 5px; }
+@media (min-width: 600px) { .dock-inner { margin-right: auto; } }
 .shuffle {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;
-  border: 0; border-radius: 18px; background: var(--primary); color: var(--on-primary);
-  padding: 16px; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.01em;
-  box-shadow: 0 8px 22px var(--glow);
+  border: 0; border-radius: 0; background: #0A0A0A; color: #FFE600;
+  padding: 15px; font-weight: 700; font-size: 1.1rem; text-transform: uppercase; letter-spacing: .04em;
 }
 .idea-btn {
-  flex: none; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--ink);
-  padding: 14px 18px; font-weight: 700; box-shadow: 0 8px 22px var(--shadow-strong);
+  flex: none; display: flex; align-items: center; gap: 7px; border: 0; border-left: 2px solid #0A0A0A; border-radius: 0; background: #FFE600; color: #0A0A0A;
+  padding: 15px 16px; font-weight: 700; font-size: .9rem; text-transform: uppercase; letter-spacing: .04em;
 }
-.shuffle svg, .idea-btn svg { width: 21px; height: 21px; flex: none; }
-.idea-btn svg { color: var(--accent); }
-.shuffle:active, .idea-btn:active { transform: scale(.97); }
+.shuffle svg, .idea-btn svg { width: 20px; height: 20px; flex: none; }
+.shuffle:active, .idea-btn:active { filter: invert(1); }
 .toast {
   position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
-  background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 12px; font-weight: 600; font-size: .92rem; z-index: 6;
+  background: #0A0A0A; color: #FFE600; border: 2px solid #FFE600; padding: 10px 16px; font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; z-index: 6;
   max-width: calc(100% - 32px); text-align: center;
 }
-@media (prefers-reduced-motion: reduce) { .card { animation: none; } .spinner { animation-duration: 3s; } .shuffle:active, .idea-btn:active { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card { animation: none; } .spinner { animation-duration: 4s; } .btn:active, .shuffle:active, .idea-btn:active { transform: none; } }
 </style>
 </head>
 <body>
@@ -255,10 +255,7 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
 <div class="app">
   <header class="top">
     <div class="headrow">
-      <div class="brandrow">
-        <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18a9 8 0 0 1-18 0z"/><path d="M8 8.5c0-1.5 1.2-1.5 1.2-3.5M12.4 8.5c0-1.5 1.2-1.5 1.2-3.5"/></svg></span>
-        <h1 class="brand">Recipe Roulette</h1>
-      </div>
+      <h1 class="brand">Recipe<br>Roulette</h1>
       <button class="gear" id="gear-btn" aria-label="Settings and backup" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
       </button>
@@ -425,8 +422,8 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
 <div class="dock" id="dock">
   <div class="dock-inner">
     <button class="shuffle" id="shuffle-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg>
       Shuffle
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
     </button>
     <button class="idea-btn" id="idea-btn">
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/><path d="M19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>
@@ -602,7 +599,348 @@ const CLASSICS = [
     ['Heat the oven to 200 °C (180 °C fan).', 'Toss the chickpeas with the oil, spices and salt.', 'Spread on a tray and roast 25–30 minutes, shaking halfway, until crunchy.', 'Cool for a few minutes; they crisp up more as they cool.']),
   R('tzatziki', 'Tzatziki', 'Snack', 10, '4', { s: 'bowl', m: '#3A86FF', b: '#F4F4EC', c: [['#6A994E', .4, 18], ['#E9C46A', .8, 2]], h: '#2D6A4F' },
     ['½ cucumber', '250 g Greek yogurt', '1 garlic clove, grated', '1 tbsp olive oil', '1 tbsp chopped dill or mint', '1 tsp lemon juice', 'Salt'],
-    ['Grate the cucumber and squeeze out as much water as you can.', 'Mix with the yogurt, garlic, oil, herbs and lemon juice.', 'Season with salt and chill until needed. Serve with pitta or vegetables.'])
+    ['Grate the cucumber and squeeze out as much water as you can.', 'Mix with the yogurt, garlic, oil, herbs and lemon juice.', 'Season with salt and chill until needed. Serve with pitta or vegetables.']),
+
+  // Breakfast (more)
+  R('eggs-benedict', 'Eggs Benedict', 'Breakfast', 30, '2', { s: 'plate', c: [['#F3D9A4', 2, 2], ['#F6D365', 1.4, 2], '#E07A5F'], h: '#3E8E3A' },
+    ['2 English muffins, split', '4 slices ham', '4 very fresh eggs', '1 tbsp white wine vinegar', '2 egg yolks', '1 tsp lemon juice', '100 g butter, melted', 'Salt and pepper', 'Chives to serve'],
+    ['For the hollandaise, whisk the yolks and lemon juice in a bowl over barely simmering water until thick, then slowly whisk in the melted butter. Season and keep warm.', 'Toast the muffins and warm the ham in a dry pan.', 'Bring a wide pan of water to a gentle simmer and add the vinegar.', 'Crack in the eggs one at a time and poach for 3 minutes, then lift out with a slotted spoon.', 'Top each muffin half with ham, an egg and hollandaise, and scatter with chives.'],
+    'If the sauce starts to split, whisk in a teaspoon of warm water.'),
+  R('huevos-rancheros', 'Huevos rancheros', 'Breakfast', 25, '2', { s: 'pan', b: '#C8553D', c: ['#2B2B2B', '#9BC53D'], e: 2, h: '#3E8E3A' },
+    ['1 tbsp oil', '1 onion, chopped', '1 garlic clove, chopped', '1 tsp ground cumin', '½ tsp chilli flakes', '1 × 400 g tin chopped tomatoes', '1 × 400 g tin black beans, drained', '4 eggs', '4 small corn tortillas', '½ avocado, sliced', '1 handful coriander', 'Salt'],
+    ['Soften the onion in the oil for 5 minutes, then add the garlic, cumin and chilli for 1 minute.', 'Stir in the tomatoes and beans, season, and simmer for 8 minutes.', 'Make four hollows, crack in the eggs, cover and cook until the whites set.', 'Warm the tortillas in a dry pan.', 'Serve the eggs and sauce on the tortillas with avocado and coriander.']),
+  R('granola', 'Crunchy honey granola', 'Breakfast', 40, '8', { s: 'jar', b: '#C98A3E', c: ['#E2B36A', '#8B5A2B', '#D9314A'] },
+    ['300 g rolled oats', '100 g mixed nuts, roughly chopped', '50 g sunflower seeds', '½ tsp ground cinnamon', 'Pinch of salt', '4 tbsp honey', '3 tbsp sunflower oil', '75 g dried cranberries'],
+    ['Heat the oven to 160 °C and line a large tray with baking paper.', 'Mix the oats, nuts, seeds, cinnamon and salt in a bowl.', 'Warm the honey and oil together, pour over and stir until everything is coated.', 'Spread out thinly and bake for 25 minutes, stirring halfway, until golden.', 'Stir in the cranberries and leave to cool on the tray; it crisps up as it cools.'],
+    'Keeps for 2 weeks in an airtight jar.'),
+  R('dutch-baby', 'Dutch baby pancake', 'Breakfast', 30, '2', { s: 'pan', b: '#E9B44C', c: ['#F5F5F0', '#D9314A', '#3D3B8E'] },
+    ['3 eggs', '120 ml milk', '75 g plain flour', '1 tbsp sugar', 'Pinch of salt', '30 g butter', 'Icing sugar, lemon and berries to serve'],
+    ['Heat the oven to 220 °C with a 25 cm ovenproof frying pan inside.', 'Blend or whisk the eggs, milk, flour, sugar and salt until smooth.', 'Add the butter to the hot pan and swirl until melted.', 'Pour in the batter and bake for 18–20 minutes, without opening the oven, until puffed and golden.', 'Dust with icing sugar, squeeze over lemon and add berries. Eat straight away.']),
+  R('scrambled-eggs', 'Creamy scrambled eggs on toast', 'Breakfast', 10, '2', { s: 'plate', c: [['#C98A3E', 2.4, 2], ['#FFD95A', 1.4, 5]], h: '#3E8E3A' },
+    ['4 eggs', '2 tbsp milk or cream', '15 g butter', '2 slices sourdough', 'Chives, snipped', 'Salt and pepper'],
+    ['Whisk the eggs with the milk and a pinch of salt.', 'Toast the bread.', 'Melt the butter in a non-stick pan over low heat and add the eggs.', 'Stir slowly with a spatula, pulling the eggs from the edges, until softly set, about 3 minutes.', 'Take off the heat while still slightly runny, then pile onto the toast with chives and pepper.']),
+  R('avocado-toast', 'Avocado toast with chilli & lime', 'Breakfast', 10, '2', { s: 'board', c: [['#C98A3E', 2.4, 2], ['#9BC53D', 1.6, 3], '#E63946'] },
+    ['2 ripe avocados', '1 lime', '½ tsp chilli flakes', '2 thick slices sourdough', '2 eggs (optional)', 'Salt'],
+    ['Toast the bread.', 'Mash the avocados with the juice of half the lime and a good pinch of salt.', 'Fry or poach the eggs if using.', 'Spread the avocado thickly on the toast and top with the eggs.', 'Finish with chilli flakes and a squeeze of lime.']),
+  R('bauernfruehstueck', 'Bauernfrühstück (farmer’s breakfast)', 'Breakfast', 30, '2', { s: 'pan', b: '#E9B44C', c: ['#F2D27A', '#C0392B', '#FFF4C4'], h: '#3E8E3A' },
+    ['500 g boiled potatoes, sliced', '1 tbsp butter', '1 tbsp oil', '1 onion, chopped', '100 g bacon lardons or diced ham', '4 eggs', '2 tbsp milk', 'Chives, snipped', 'Salt and pepper'],
+    ['Fry the potatoes in the butter and oil over medium-high heat until golden, about 10 minutes.', 'Add the onion and bacon and fry for 5 minutes more.', 'Whisk the eggs with the milk, salt and pepper.', 'Pour over the potatoes and cook gently, stirring once or twice, until just set.', 'Scatter with chives and serve with gherkins.'],
+    'A great way to use up yesterday’s boiled potatoes.'),
+  R('quarkkeulchen', 'Quarkkäulchen (quark potato cakes)', 'Breakfast', 35, '4', { s: 'plate', c: [['#E2A65E', 1.8, 6], '#D9314A'] },
+    ['400 g boiled floury potatoes, cooled', '250 g quark', '1 egg', '80 g plain flour', '3 tbsp sugar', '1 tsp lemon zest', '50 g raisins (optional)', 'Butter for frying', 'Cinnamon sugar and apple sauce to serve'],
+    ['Press or mash the potatoes until smooth.', 'Mix in the quark, egg, flour, sugar, lemon zest and raisins to a soft dough.', 'With floured hands, shape into 12 small flat cakes.', 'Fry in butter over medium heat for 3–4 minutes a side until golden.', 'Sprinkle with cinnamon sugar and serve with apple sauce.']),
+  R('smoothie-bowl', 'Berry smoothie bowl', 'Breakfast', 10, '1', { s: 'bowl', m: '#FFFFFF', b: '#8E3B8E', c: ['#F6E7A8', '#D9314A', '#E2B36A'] },
+    ['150 g frozen mixed berries', '1 frozen banana', '100 g plain yogurt', '50 ml milk', '2 tbsp granola', '1 tbsp seeds or nuts', 'Fresh fruit to top'],
+    ['Blend the berries, banana, yogurt and milk until thick and smooth, adding milk only if needed.', 'Spoon into a bowl.', 'Top with granola, seeds and fresh fruit.']),
+  R('breakfast-hash', 'Sweet potato breakfast hash', 'Breakfast', 30, '2', { s: 'pan', c: ['#F28C28', '#E63946', '#2E7D32'], e: 2, h: '#3E8E3A' },
+    ['2 sweet potatoes, peeled and diced', '1 red onion, chopped', '1 red pepper, diced', '2 tbsp olive oil', '1 tsp smoked paprika', '2 handfuls spinach', '2 eggs', 'Salt and pepper'],
+    ['Fry the sweet potato in the oil over medium heat, covered, for 10 minutes, stirring now and then.', 'Add the onion, pepper and paprika and cook uncovered for 8 minutes until browned.', 'Stir in the spinach to wilt and season.', 'Make two hollows, crack in the eggs, cover and cook until set.']),
+  R('porridge', 'Apple cinnamon porridge', 'Breakfast', 10, '2', { s: 'bowl', m: '#F4A259', b: '#EFE3CC', c: ['#C98A3E', '#E9C46A'] },
+    ['100 g rolled oats', '500 ml milk', '1 apple, grated', '½ tsp ground cinnamon', '1 tbsp maple syrup or honey', '1 tbsp chopped walnuts', 'Pinch of salt'],
+    ['Put the oats, milk, apple, cinnamon and salt in a pan.', 'Bring to a simmer and cook, stirring, for 5 minutes until creamy.', 'Spoon into bowls and top with maple syrup and walnuts.']),
+  R('waffles', 'Buttermilk waffles', 'Breakfast', 30, '4', { s: 'plate', c: [['#E2B36A', 2.2, 3], '#D9314A', '#F5F5F0'] },
+    ['250 g plain flour', '2 tbsp sugar', '2 tsp baking powder', '½ tsp bicarbonate of soda', 'Pinch of salt', '2 eggs', '400 ml buttermilk', '75 g butter, melted'],
+    ['Heat the waffle iron.', 'Mix the flour, sugar, baking powder, bicarbonate and salt in a bowl.', 'Whisk the eggs, buttermilk and melted butter, then stir into the dry ingredients until just combined.', 'Cook ladlefuls in the greased waffle iron until golden and crisp.', 'Serve with fruit, yogurt or maple syrup.'],
+    'Keep cooked waffles crisp on a rack in a low oven.'),
+  R('frittata', 'Courgette & feta frittata', 'Breakfast', 25, '4', { s: 'pan', b: '#F2D27A', c: ['#7CB342', '#FFFFFF'], h: '#3E8E3A' },
+    ['1 tbsp olive oil', '2 courgettes, thinly sliced', '4 spring onions, sliced', '8 eggs', '100 g feta, crumbled', '1 handful mint or basil', 'Salt and pepper'],
+    ['Heat the grill.', 'Fry the courgettes in the oil in an ovenproof pan until soft and lightly golden, about 8 minutes. Add the spring onions for the last minute.', 'Whisk the eggs with salt and pepper and pour over.', 'Scatter over the feta and cook over low heat until the edges set, about 6 minutes.', 'Grill for 3–4 minutes until puffed and set, then scatter with herbs.']),
+  R('menemen', 'Menemen (Turkish scrambled eggs)', 'Breakfast', 20, '2', { s: 'pan', b: '#D2432B', c: ['#7CB342', '#FFD95A'], h: '#3E8E3A' },
+    ['2 tbsp olive oil', '1 green pepper, chopped', '1 small onion, chopped (optional)', '3 ripe tomatoes, chopped', '½ tsp chilli flakes', '4 eggs', 'Parsley, chopped', 'Salt'],
+    ['Soften the pepper and onion in the oil for 5 minutes.', 'Add the tomatoes, chilli and a pinch of salt and cook until saucy, about 6 minutes.', 'Crack in the eggs and stir gently until softly scrambled.', 'Scatter with parsley and serve with crusty bread.']),
+
+  // Snacks (more)
+  R('kartoffelpuffer', 'Kartoffelpuffer / Reiberdatschi (potato pancakes)', 'Snack', 35, '4', { s: 'plate', c: [['#D99A4E', 1.8, 6], '#F2D49B'] },
+    ['1 kg floury potatoes, peeled', '1 onion', '2 eggs', '3 tbsp plain flour', '1 tsp salt', 'Oil for frying', 'Apple sauce or sour cream to serve'],
+    ['Grate the potatoes and onion, then squeeze out as much liquid as you can in a clean tea towel.', 'Mix with the eggs, flour and salt.', 'Heat a thin layer of oil in a frying pan over medium-high heat.', 'Add heaped tablespoons of the mixture, flatten, and fry for 3–4 minutes a side until crisp and golden.', 'Drain on kitchen paper and serve hot with apple sauce or sour cream.']),
+  R('obatzda', 'Obatzda (Bavarian cheese dip)', 'Snack', 15, '4', { s: 'bowl', m: '#FFFFFF', b: '#F2C14E', c: ['#C0392B', '#F4EFE6'], h: '#3E8E3A' },
+    ['200 g ripe Camembert', '50 g soft butter', '100 g cream cheese', '1 small red onion, finely chopped', '1 tsp sweet paprika', '½ tsp caraway seeds (optional)', '2 tbsp beer or milk', 'Chives, snipped', 'Salt and pepper'],
+    ['Cut the Camembert into small pieces and mash with a fork.', 'Beat in the butter, cream cheese and beer until creamy but still a little chunky.', 'Stir in most of the onion, the paprika and caraway, and season.', 'Top with the rest of the onion and the chives. Serve with pretzels or rye bread and radishes.']),
+  R('brezeln', 'Soft pretzels', 'Snack', 90, 'Makes 8', { s: 'board', c: [['#8B4A2B', 2.2, 4], ['#FFFFFF', .3, 20]] },
+    ['500 g strong white flour', '7 g dried yeast', '1 tsp sugar', '1½ tsp salt', '300 ml warm water', '30 g soft butter', '60 g bicarbonate of soda', '1.5 litres water for boiling', 'Coarse salt to sprinkle'],
+    ['Mix the flour, yeast, sugar, salt, warm water and butter and knead for 8 minutes until smooth. Cover and leave for 1 hour.', 'Heat the oven to 220 °C and line two trays with baking paper.', 'Divide into 8, roll each into a 50 cm rope, and twist into a pretzel shape.', 'Bring the 1.5 litres of water to the boil, add the bicarbonate, and dip each pretzel for 20 seconds. Lift onto the trays.', 'Sprinkle with coarse salt and bake for 14–16 minutes until deep brown.'],
+    'Best on the day, with butter or Obatzda.'),
+  R('deviled-eggs', 'Devilled eggs', 'Snack', 20, '6', { s: 'plate', c: [['#FFFFFF', 1.6, 6], ['#F6D365', .9, 6], ['#D2432B', .3, 12]] },
+    ['6 eggs', '3 tbsp mayonnaise', '1 tsp Dijon mustard', '1 tsp lemon juice', 'Smoked paprika', 'Chives, snipped', 'Salt and pepper'],
+    ['Boil the eggs for 10 minutes, then cool in cold water and peel.', 'Halve lengthways and scoop the yolks into a bowl.', 'Mash the yolks with the mayonnaise, mustard and lemon juice, and season.', 'Spoon or pipe back into the whites.', 'Dust with paprika and scatter with chives.']),
+  R('nachos', 'Loaded nachos', 'Snack', 20, '4', { s: 'tray', b: '#F2C14E', c: [['#E9B44C', 1.6, 10], '#E63946', '#2B2B2B', '#9BC53D'] },
+    ['200 g tortilla chips', '1 × 400 g tin black beans, drained', '150 g cheddar, grated', '2 tomatoes, diced', '½ red onion, finely chopped', '1 jalapeño, sliced', '1 avocado, diced', '100 g sour cream', '1 handful coriander'],
+    ['Heat the oven to 200 °C.', 'Spread the chips on a large tray and scatter over the beans and cheese.', 'Bake for 8 minutes until the cheese has melted.', 'Top with tomato, onion, jalapeño, avocado, sour cream and coriander, and serve straight away.']),
+  R('summer-rolls', 'Prawn summer rolls (Sommerrollen)', 'Snack', 30, 'Makes 8', { s: 'board', c: [['#F4F1DE', 1.8, 4], '#F28482', '#7CB342'] },
+    ['8 rice paper wrappers', '50 g rice vermicelli, cooked', '16 cooked prawns, halved lengthways', '1 carrot, cut into matchsticks', '½ cucumber, cut into matchsticks', '1 handful mint and coriander', '3 tbsp peanut butter', '1 tbsp soy sauce', '1 tbsp lime juice', '1 tsp honey'],
+    ['Dip a rice paper wrapper in warm water for a few seconds until soft, then lay it on a damp board.', 'Lay prawns along the middle, then noodles, vegetables and herbs.', 'Fold in the sides and roll up tightly. Repeat with the rest.', 'Whisk the peanut butter, soy sauce, lime juice, honey and 2–3 tbsp warm water into a dipping sauce.']),
+  R('baba-ganoush', 'Baba ganoush', 'Snack', 45, '4', { s: 'bowl', m: '#FFFFFF', b: '#C9B38C', c: [['#C1440E', .35, 12], '#3E8E3A'], h: '#6A994E' },
+    ['2 aubergines', '2 tbsp tahini', '1 garlic clove, crushed', '1 lemon, juiced', '2 tbsp olive oil', 'Smoked paprika', 'Parsley, chopped', 'Salt'],
+    ['Char the aubergines over a gas flame or under a hot grill, turning, until blackened and collapsed, 20–25 minutes.', 'Leave to cool, then scoop out the flesh and drain in a sieve for 10 minutes.', 'Mash with the tahini, garlic, lemon juice and salt.', 'Spread in a bowl, drizzle with olive oil, and sprinkle with paprika and parsley. Serve with flatbread.']),
+  R('cheese-straws', 'Cheese straws', 'Snack', 25, 'Makes 20', { s: 'board', c: [['#E9B44C', 1, 12], ['#F2D49B', 1, 8]] },
+    ['320 g ready-rolled puff pastry', '1 egg, beaten', '80 g mature cheddar or parmesan, finely grated', '½ tsp smoked paprika'],
+    ['Heat the oven to 200 °C and line a tray with baking paper.', 'Unroll the pastry, brush with egg and scatter over the cheese and paprika.', 'Fold in half, press down, and cut into 1.5 cm strips.', 'Twist each strip and lay on the tray.', 'Bake for 12–15 minutes until golden and crisp.']),
+  R('flapjacks', 'Golden syrup flapjacks', 'Snack', 40, 'Makes 12', { s: 'tray', b: '#C98A3E', c: [['#D9A05B', 1.6, 6]] },
+    ['150 g butter', '120 g light brown sugar', '4 tbsp golden syrup', '300 g rolled oats', 'Pinch of salt'],
+    ['Heat the oven to 180 °C and line a 20 cm square tin.', 'Melt the butter, sugar and syrup together in a pan.', 'Stir in the oats and salt until coated.', 'Press firmly into the tin and bake for 20–25 minutes until golden at the edges.', 'Cut into bars while warm, then leave to cool completely in the tin.']),
+  R('energy-balls', 'Date & cocoa energy balls', 'Snack', 15, 'Makes 16', { s: 'plate', c: [['#5A3220', 1.2, 10], ['#E9C46A', .3, 10]] },
+    ['200 g soft pitted dates', '100 g almonds or cashews', '50 g rolled oats', '2 tbsp cocoa powder', '1 tbsp peanut butter', 'Pinch of salt', 'Desiccated coconut to roll'],
+    ['Blitz the nuts and oats in a food processor until fine.', 'Add the dates, cocoa, peanut butter and salt and blitz until it clumps together.', 'Roll into 16 balls and roll in coconut.', 'Chill for 30 minutes to firm up.'],
+    'Keeps for a week in the fridge.'),
+  // Lunch (more)
+  R('kartoffelsalat', 'Swabian potato salad', 'Lunch', 40, '4', { s: 'bowl', m: '#FFFFFF', b: '#F2DCA0', c: [['#F2D27A', 1.4, 10], '#7A3E1B'], h: '#3E8E3A' },
+    ['1 kg waxy potatoes', '1 onion, finely chopped', '250 ml hot beef or vegetable stock', '3 tbsp white wine vinegar', '1 tsp mustard', '1 tsp sugar', '4 tbsp sunflower oil', 'Chives, snipped', 'Salt and pepper'],
+    ['Boil the potatoes in their skins until just tender, about 20 minutes. Peel while warm and slice thinly into a bowl.', 'Simmer the onion in the stock for 2 minutes, then stir in the vinegar, mustard, sugar, salt and pepper.', 'Pour the hot dressing over the potatoes and toss gently.', 'Leave for 20 minutes to soak in, then stir in the oil and chives.', 'Check the seasoning; it should be tangy and juicy.'],
+    'Classic with Frikadellen or a Schnitzel.'),
+  R('erbsensuppe', 'Erbsensuppe (split pea soup)', 'Lunch', 75, '6', { s: 'bowl', m: '#C8553D', b: '#B5B84A', c: ['#E07A3F', '#D9902F', '#F2E4B0'], z: .7 },
+    ['500 g dried green split peas, rinsed', '1 tbsp oil', '1 onion, chopped', '2 carrots, diced', '2 potatoes, diced', '1 small leek, sliced', '1.8 litres vegetable stock', '1 tsp dried marjoram', '4 smoked sausages (Wiener), sliced', 'Salt and pepper'],
+    ['Soften the onion in the oil in a large pot for 5 minutes.', 'Add the split peas and stock, bring to the boil, and simmer for 40 minutes, skimming off any foam.', 'Add the carrots, potatoes, leek and marjoram and simmer for 20 minutes more, until the peas have broken down.', 'Add the sausages and heat through for 5 minutes.', 'Season and serve with bread.'],
+    'Tastes even better the next day; thin with a little water when reheating.'),
+  R('linseneintopf', 'Linseneintopf (lentil stew with sausage)', 'Lunch', 55, '4', { s: 'bowl', m: '#264653', b: '#8C5A3C', c: ['#E07A3F', '#C0392B', '#F2E4B0'], z: .7, h: '#3E8E3A' },
+    ['250 g brown or green lentils, rinsed', '1 tbsp oil', '100 g smoked bacon, diced', '1 onion, chopped', '2 carrots, diced', '2 potatoes, diced', '1 celery stick, diced', '1.2 litres vegetable stock', '1 bay leaf', '4 Wiener sausages, sliced', '2 tbsp vinegar', 'Salt and pepper'],
+    ['Fry the bacon in the oil, then add the onion and cook for 5 minutes.', 'Add the lentils, vegetables, stock and bay leaf. Bring to the boil and simmer for 35 minutes until the lentils are soft.', 'Add the sausages and warm through for 5 minutes.', 'Stir in the vinegar, season well, and serve.'],
+    'The splash of vinegar at the end is traditional; add it to taste.'),
+  R('flammkuchen', 'Flammkuchen', 'Lunch', 30, '2', { s: 'board', c: [['#F4EFE6', 3, 1], ['#C0392B', .5, 10], ['#C77DBA', .5, 8]] },
+    ['200 g plain flour', '100 ml water', '2 tbsp oil', '½ tsp salt', '200 g crème fraîche', '1 onion, very thinly sliced', '150 g smoked bacon lardons', 'Pepper and nutmeg'],
+    ['Heat the oven as high as it goes, ideally 250 °C, with a tray inside.', 'Mix the flour, water, oil and salt into a smooth dough and knead briefly.', 'Roll out as thinly as you can on baking paper.', 'Spread with crème fraîche seasoned with pepper and nutmeg, then scatter over the onion and bacon.', 'Slide onto the hot tray and bake for 10–12 minutes until the edges are crisp and browned.']),
+  R('senfeier', 'Senfeier (eggs in mustard sauce)', 'Lunch', 30, '4', { s: 'plate', b: '#F2D27A', c: [['#FFFFFF', 1.6, 4], ['#F6D365', .9, 4], '#F2E4B0'], h: '#3E8E3A' },
+    ['8 eggs', '800 g potatoes, peeled', '30 g butter', '30 g plain flour', '400 ml vegetable stock', '100 ml cream', '3 tbsp medium mustard', '1 tsp sugar', 'Dill or chives', 'Salt and pepper'],
+    ['Boil the potatoes until tender, about 20 minutes.', 'Boil the eggs for 8 minutes, cool in cold water, and peel.', 'Melt the butter, stir in the flour, and cook for 1 minute. Gradually whisk in the stock and cream and simmer for 5 minutes.', 'Stir in the mustard and sugar and season.', 'Halve the eggs, warm them in the sauce, and serve with the potatoes and herbs.']),
+  R('caprese', 'Caprese salad', 'Lunch', 10, '2', { s: 'plate', c: [['#E63946', 1.4, 5], ['#FFFFFF', 1.4, 5]], h: '#2E7D32' },
+    ['3 large ripe tomatoes, sliced', '2 × 125 g balls mozzarella, sliced', '1 handful basil leaves', '3 tbsp good olive oil', '1 tsp balsamic vinegar (optional)', 'Flaky salt and pepper'],
+    ['Arrange the tomato and mozzarella slices on a plate, overlapping.', 'Tuck in the basil leaves.', 'Drizzle with olive oil and a little balsamic, and season with salt and pepper.', 'Serve with bread to mop up the juices.'],
+    'Only worth making with really ripe tomatoes.'),
+  R('nicoise', 'Salade niçoise', 'Lunch', 25, '2', { s: 'bowl', m: '#1F5FA8', b: '#E8F2D0', c: ['#7CB342', '#E63946', '#2B2B2B', '#F2D27A'], e: 2 },
+    ['300 g new potatoes', '150 g green beans', '2 eggs', '1 Little Gem lettuce', '2 tomatoes, quartered', '1 × 160 g tin tuna, drained', '50 g black olives', '4 anchovies (optional)', '3 tbsp olive oil', '1 tbsp red wine vinegar', '1 tsp Dijon mustard', 'Salt and pepper'],
+    ['Boil the potatoes for 15 minutes, adding the beans for the last 4 minutes. Drain and cool.', 'Boil the eggs for 8 minutes, cool and halve.', 'Whisk the oil, vinegar and mustard with salt and pepper.', 'Arrange the lettuce, potatoes, beans, tomatoes, tuna, olives, anchovies and eggs on plates.', 'Drizzle with the dressing.']),
+  R('gazpacho', 'Gazpacho', 'Lunch', 20, '4', { s: 'bowl', m: '#F4EFE6', b: '#D9402B', c: ['#7CB342', '#F5E6D3'], z: .5, h: '#3E8E3A' },
+    ['1 kg ripe tomatoes, chopped', '½ cucumber, chopped', '1 red pepper, chopped', '1 garlic clove', '1 slice stale white bread', '4 tbsp olive oil', '2 tbsp sherry vinegar', 'Salt'],
+    ['Blend everything except the oil until very smooth.', 'With the blender running, drizzle in the olive oil.', 'Season with salt and more vinegar to taste.', 'Chill for at least 1 hour.', 'Serve cold, topped with finely diced cucumber and pepper and a drizzle of oil.']),
+  R('french-onion-soup', 'French onion soup', 'Lunch', 80, '4', { s: 'bowl', m: '#FFFFFF', b: '#8C5A2B', c: [['#E9C46A', 2.2, 2], '#C98A3E'], z: .7 },
+    ['50 g butter', '1 kg onions, thinly sliced', '1 tsp sugar', '2 garlic cloves, chopped', '150 ml white wine', '1.2 litres beef stock', '2 thyme sprigs', '4 slices baguette', '100 g Gruyère, grated', 'Salt and pepper'],
+    ['Melt the butter in a large pan, add the onions and a pinch of salt, and cook gently, stirring often, for 40 minutes until deep golden.', 'Add the sugar and garlic and cook for 5 minutes more.', 'Pour in the wine and let it bubble away, then add the stock and thyme and simmer for 20 minutes. Season.', 'Toast the baguette slices and top with the cheese.', 'Ladle the soup into ovenproof bowls, float the toasts on top, and grill until bubbling.']),
+  R('leek-potato-soup', 'Leek & potato soup', 'Lunch', 35, '4', { s: 'bowl', m: '#2A9D8F', b: '#EDE6C8', c: ['#7BA05B'], z: .5, h: '#3E8E3A' },
+    ['30 g butter', '3 leeks, sliced', '1 onion, chopped', '500 g potatoes, peeled and diced', '1.2 litres vegetable stock', '100 ml cream or milk', 'Chives, snipped', 'Salt and pepper'],
+    ['Melt the butter and soften the leeks and onion, covered, for 10 minutes.', 'Add the potatoes and stock and simmer for 15 minutes until soft.', 'Blend until smooth, then stir in the cream.', 'Season and serve with chives.']),
+  R('club-sandwich', 'Club sandwich', 'Lunch', 20, '2', { s: 'board', c: [['#E2B36A', 2.4, 2], '#E63946', '#7CB342', '#F2D7A0'] },
+    ['6 slices bread', '4 rashers bacon', '1 cooked chicken breast, sliced', '2 tbsp mayonnaise', '2 lettuce leaves', '1 tomato, sliced', 'Salt and pepper'],
+    ['Fry the bacon until crisp.', 'Toast the bread and spread each slice with mayonnaise.', 'Layer one slice with chicken and lettuce, add a second slice, then bacon and tomato, and finish with a third slice.', 'Press down, cut into triangles, and hold together with cocktail sticks. Repeat for the second sandwich.']),
+  R('banh-mi', 'Chicken bánh mì', 'Lunch', 30, '2', { s: 'board', c: [['#E2B36A', 2.6, 2], '#F28C28', '#7CB342', '#C98A3E'] },
+    ['2 chicken thighs, boneless', '1 tbsp soy sauce', '1 tbsp honey', '1 garlic clove, crushed', '1 carrot, cut into matchsticks', '¼ cucumber, sliced', '3 tbsp rice vinegar', '1 tsp sugar', '2 small baguettes', '2 tbsp mayonnaise', '1 tsp sriracha', '1 handful coriander'],
+    ['Mix the soy sauce, honey and garlic and coat the chicken.', 'Toss the carrot and cucumber with the vinegar, sugar and a pinch of salt and leave to pickle.', 'Fry or grill the chicken for 5–6 minutes a side until cooked, then slice.', 'Split and warm the baguettes. Spread with mayonnaise mixed with sriracha.', 'Fill with chicken, drained pickles and coriander.']),
+  R('tabbouleh', 'Tabbouleh', 'Lunch', 25, '4', { s: 'bowl', m: '#FFFFFF', b: '#7BA23F', c: ['#E63946', '#F2E3B3', '#F5F5F0'], h: '#2D6A4F' },
+    ['75 g bulgur wheat', '3 large bunches parsley, finely chopped', '1 small bunch mint, chopped', '4 tomatoes, finely diced', '4 spring onions, sliced', '1 lemon, juiced', '4 tbsp olive oil', 'Salt'],
+    ['Cover the bulgur with boiling water and leave for 15 minutes, then drain well.', 'Mix with the parsley, mint, tomatoes and spring onions.', 'Dress with lemon juice, olive oil and salt.', 'Serve straight away, with flatbread or grilled meat.'],
+    'Proper tabbouleh is mostly parsley, with just a little bulgur.'),
+  R('egg-mayo-sandwich', 'Egg mayo sandwich', 'Lunch', 15, '2', { s: 'board', c: [['#F4EFE6', 2.6, 2], ['#F6D365', 1, 4]], h: '#3E8E3A' },
+    ['4 eggs', '3 tbsp mayonnaise', '1 tsp mustard', 'Small bunch of cress or chives', '4 slices soft bread', 'Butter', 'Salt and pepper'],
+    ['Boil the eggs for 9 minutes, cool in cold water and peel.', 'Mash with the mayonnaise and mustard, and season.', 'Butter the bread and spread the egg mix on two slices.', 'Top with cress, close the sandwiches, and cut in half.']),
+  R('quiche-lorraine', 'Quiche Lorraine', 'Lunch', 70, '6', { s: 'pizza', b: '#F2D27A', c: [['#C0392B', .5, 12]], h: '#3E8E3A' },
+    ['320 g ready-rolled shortcrust pastry', '200 g smoked bacon lardons', '3 eggs', '300 ml cream', '100 ml milk', '100 g Gruyère, grated', 'Pinch of nutmeg', 'Salt and pepper'],
+    ['Heat the oven to 200 °C. Line a 23 cm tart tin with the pastry, prick the base, and chill for 10 minutes.', 'Line with baking paper and baking beans and bake for 15 minutes, then remove the paper and bake for 5 minutes more.', 'Fry the bacon until golden and scatter into the pastry case with the cheese.', 'Whisk the eggs, cream, milk, nutmeg, salt and pepper and pour in.', 'Lower the oven to 180 °C and bake for 30 minutes until just set with a slight wobble. Cool for 10 minutes before slicing.']),
+  R('spinach-feta-pie', 'Spinach & feta filo pie', 'Lunch', 60, '6', { s: 'tray', b: '#E9B44C', c: [['#F2D49B', 2.2, 4], '#2E7D32'] },
+    ['500 g spinach', '1 tbsp olive oil', '1 bunch spring onions, sliced', '200 g feta, crumbled', '100 g ricotta', '2 eggs', '1 handful dill, chopped', '½ tsp nutmeg', '270 g filo pastry', '60 g butter, melted', 'Pepper'],
+    ['Heat the oven to 190 °C.', 'Wilt the spinach in a pan, cool, then squeeze out all the water and chop.', 'Soften the spring onions in the oil, then mix with the spinach, feta, ricotta, eggs, dill, nutmeg and pepper.', 'Brush a baking dish with butter and layer in half the filo, brushing each sheet. Spread in the filling and top with the rest of the filo, buttering each sheet.', 'Score the top into squares and bake for 35–40 minutes until golden and crisp.']),
+  R('poke-bowl', 'Salmon poke bowl', 'Lunch', 30, '2', { s: 'bowl', m: '#1D3557', b: '#FAF7F0', c: ['#F08A5D', '#9BC53D', '#F28C28', '#2E7D32'] },
+    ['150 g sushi rice', '2 tbsp rice vinegar', '1 tsp sugar', '250 g very fresh salmon, diced', '2 tbsp soy sauce', '1 tsp sesame oil', '1 avocado, sliced', '1 carrot, grated', '100 g edamame beans', '¼ cucumber, sliced', '1 tbsp sesame seeds', '2 spring onions, sliced'],
+    ['Rinse the rice and cook it, then stir in the vinegar and sugar and let it cool a little.', 'Toss the salmon with the soy sauce and sesame oil.', 'Divide the rice between bowls.', 'Arrange the salmon, avocado, carrot, edamame and cucumber on top.', 'Sprinkle with sesame seeds and spring onions.'],
+    'Use sushi-grade fish, or swap in cooked salmon or tofu.'),
+  R('cobb-salad', 'Cobb salad', 'Lunch', 25, '2', { s: 'bowl', m: '#FFFFFF', b: '#C7E09A', c: ['#E63946', '#F2D27A', '#9BC53D', '#F5F5F0', '#B5651D'] },
+    ['2 chicken breasts', '4 rashers bacon', '2 eggs', '1 romaine lettuce, chopped', '2 tomatoes, diced', '1 avocado, diced', '60 g blue cheese, crumbled', '3 tbsp olive oil', '1 tbsp red wine vinegar', '1 tsp Dijon mustard', 'Salt and pepper'],
+    ['Season and pan-fry the chicken for 6–7 minutes a side until cooked, then slice.', 'Fry the bacon until crisp and break into pieces. Boil the eggs for 9 minutes, cool and chop.', 'Whisk the oil, vinegar and mustard with salt and pepper.', 'Spread the lettuce on a platter and arrange the chicken, bacon, egg, tomato, avocado and cheese in rows on top.', 'Drizzle with the dressing just before eating.']),
+  R('lentil-salad', 'Warm lentil salad with goat’s cheese', 'Lunch', 30, '2', { s: 'plate', b: '#5C4033', c: ['#F5F5F0', '#E63946', '#7CB342'], h: '#3E8E3A' },
+    ['150 g Puy or green lentils', '1 red onion, thinly sliced', '3 tbsp olive oil', '1 tbsp red wine vinegar', '1 tsp Dijon mustard', '100 g cherry tomatoes, halved', '2 handfuls rocket', '100 g soft goat’s cheese', 'Salt and pepper'],
+    ['Simmer the lentils in plenty of water for 20 minutes until just tender, then drain.', 'Meanwhile soften the onion in 1 tbsp of the oil.', 'Whisk the rest of the oil with the vinegar, mustard, salt and pepper, and toss with the warm lentils and onion.', 'Fold in the tomatoes and rocket.', 'Crumble over the goat’s cheese and serve warm.']),
+  R('croque-monsieur', 'Croque monsieur', 'Lunch', 25, '2', { s: 'board', c: [['#E9B44C', 2.6, 2], ['#C98A3E', .8, 6]] },
+    ['15 g butter', '15 g plain flour', '150 ml milk', '100 g Gruyère, grated', 'Pinch of nutmeg', '4 slices white bread', '1 tsp Dijon mustard', '4 slices ham', 'Salt and pepper'],
+    ['Melt the butter, stir in the flour, then whisk in the milk and simmer until thick. Stir in half the cheese, the nutmeg, salt and pepper.', 'Heat the grill.', 'Spread two slices of bread with mustard, top with ham and a little of the remaining cheese, and close with the other slices.', 'Toast the sandwiches in a pan with a little butter until golden on both sides.', 'Spread the sauce over the top, scatter with the rest of the cheese, and grill until bubbling.']),
+  R('pasta-salad', 'Italian pasta salad', 'Lunch', 25, '4', { s: 'bowl', m: '#FFFFFF', b: '#F2DCA0', c: [['#F2D27A', 1, 10], '#E63946', '#2B2B2B', '#FFFFFF', '#7CB342'] },
+    ['300 g fusilli', '200 g cherry tomatoes, halved', '125 g mini mozzarella balls', '50 g black olives', '½ red onion, finely sliced', '2 tbsp pesto', '3 tbsp olive oil', '1 tbsp red wine vinegar', '1 handful rocket', 'Salt and pepper'],
+    ['Cook the pasta until al dente, then rinse under cold water and drain well.', 'Whisk the pesto, oil and vinegar together.', 'Toss the pasta with the dressing, tomatoes, mozzarella, olives and onion.', 'Season, and fold in the rocket just before serving.'],
+    'Keeps for a day in the fridge, so it is good for lunchboxes.'),
+  R('miso-soup', 'Miso soup with tofu', 'Lunch', 15, '2', { s: 'bowl', m: '#2B2B2B', b: '#D9B37A', c: [['#F5F5F0', .8, 8], '#2E7D32'], z: .6 },
+    ['700 ml dashi or light vegetable stock', '3 tbsp white miso paste', '150 g silken tofu, cubed', '1 tbsp dried wakame seaweed', '2 spring onions, sliced'],
+    ['Heat the stock until just steaming; do not let it boil.', 'Soak the wakame in warm water for 5 minutes and drain.', 'Mix the miso with a ladle of the warm stock until smooth, then stir it back into the pan.', 'Add the tofu and wakame and warm through for 2 minutes.', 'Serve topped with spring onions.']),
+  // Dinner (more)
+  R('kaesespaetzle', 'Käsespätzle (cheese noodles)', 'Dinner', 45, '4', { s: 'pan', b: '#F2D27A', c: [['#F6DB8A', 1, 14], ['#8B5A2B', .8, 8]], h: '#3E8E3A' },
+    ['400 g plain flour', '4 eggs', '150 ml water', '1 tsp salt', '30 g butter', '3 onions, thinly sliced', '250 g grated mountain cheese or Emmental', 'Chives, snipped', 'Pepper and nutmeg'],
+    ['Beat the flour, eggs, water and salt with a wooden spoon until the dough is smooth and bubbly. Rest for 10 minutes.', 'Fry the onions in the butter over medium heat, stirring, until deep golden and crisp, about 20 minutes.', 'Bring a big pot of salted water to the boil. Press the dough through a spätzle maker or a large-holed colander into the water; when the spätzle float, lift them out.', 'Layer the hot spätzle in a warm dish with the cheese, pepper and nutmeg, and stir until the cheese melts.', 'Top with the fried onions and chives.'],
+    'Shop-bought fresh spätzle work too; just toss them with the cheese in a hot pan.'),
+  R('rouladen', 'Rinderrouladen (beef rolls)', 'Dinner', 120, '4', { s: 'plate', b: '#6B3A1E', c: [['#7B3F20', 2, 4], '#F2D49B'], h: '#3E8E3A' },
+    ['4 thin slices beef topside (about 180 g each)', '4 tsp medium mustard', '4 rashers smoked bacon', '1 onion, finely chopped', '2 gherkins, cut into strips', '2 tbsp oil', '1 carrot, diced', '1 celery stick, diced', '1 tbsp tomato paste', '200 ml red wine', '400 ml beef stock', '1 tsp cornflour', 'Salt and pepper'],
+    ['Lay out the beef, season, and spread each slice with mustard. Top with bacon, a little onion and gherkin, then roll up tightly and secure with cocktail sticks or string.', 'Brown the rolls well on all sides in the oil in a casserole, then lift out.', 'Fry the carrot, celery and remaining onion for 5 minutes, stir in the tomato paste, then add the wine and stock.', 'Return the rolls, cover, and simmer gently for 1½ hours until tender, turning once.', 'Lift out the rolls, blend or strain the sauce, thicken with the cornflour mixed with a little water, and season.'],
+    'Serve with red cabbage and potato dumplings or mash.'),
+  R('gulasch', 'Rindergulasch (beef goulash)', 'Dinner', 150, '6', { s: 'bowl', m: '#F4EFE6', b: '#8E2C1C', c: [['#5A1F14', 1.4, 8], '#E63946'], z: .8, h: '#3E8E3A' },
+    ['1 kg beef shin or chuck, cut into chunks', '3 tbsp oil', '750 g onions, chopped', '2 garlic cloves, chopped', '2 tbsp sweet paprika', '1 tsp hot paprika', '2 tbsp tomato paste', '1 tsp caraway seeds', '1 tsp dried marjoram', '750 ml beef stock', '1 red pepper, diced', 'Salt and pepper'],
+    ['Brown the beef in batches in the oil and set aside.', 'Fry the onions in the same pot over medium heat for 15 minutes until soft and golden. Add the garlic.', 'Take off the heat, stir in both paprikas and the tomato paste, then add the caraway, marjoram, stock and beef.', 'Cover and simmer very gently for 2 hours until the beef is tender, adding the pepper for the last 30 minutes.', 'Season and serve with bread dumplings, noodles or potatoes.'],
+    'Even better made a day ahead.'),
+  R('schnitzel', 'Schnitzel with lemon', 'Dinner', 30, '4', { s: 'plate', c: [['#D99A4E', 2.6, 2], ['#F4D35E', .8, 2]], h: '#3E8E3A' },
+    ['4 escalopes of pork or veal (about 150 g each)', '60 g plain flour', '2 eggs, beaten', '120 g fine breadcrumbs', 'Oil and butter for frying', '1 lemon, cut into wedges', 'Salt and pepper'],
+    ['Place the escalopes between cling film and beat with a rolling pin until about 4 mm thin. Season.', 'Set out the flour, eggs and breadcrumbs in three shallow dishes.', 'Coat each escalope in flour, then egg, then breadcrumbs, without pressing the crumbs on.', 'Heat 1 cm of oil with a knob of butter in a large frying pan. Fry the schnitzels for 2–3 minutes a side, swirling the pan so the crumb puffs up, until golden.', 'Drain on kitchen paper and serve with lemon wedges and potato salad.']),
+  R('sauerbraten', 'Sauerbraten', 'Dinner', 180, '6', { s: 'plate', b: '#6B3A1E', c: [['#7B3F20', 2.2, 3], '#C0392B', '#F2D49B'] },
+    ['1.2 kg beef topside', '500 ml red wine', '250 ml red wine vinegar', '250 ml water', '2 onions, sliced', '1 carrot, sliced', '5 juniper berries', '2 bay leaves', '4 cloves', '1 tsp peppercorns', '2 tbsp oil', '50 g ginger biscuits (Lebkuchen or gingernuts), crumbled', '1 tbsp raisins', 'Salt'],
+    ['Bring the wine, vinegar, water, vegetables and spices to the boil, cool, and pour over the beef in a dish. Cover and marinate in the fridge for 2–3 days, turning daily.', 'Lift out the beef, pat dry, season with salt, and brown well in the oil in a casserole.', 'Strain the marinade and add half of it with the vegetables. Cover and simmer gently for 2 hours until tender.', 'Lift out the beef and keep warm. Strain the liquid, stir in the crumbled biscuits and raisins, and simmer until it thickens into a glossy sweet-sour sauce.', 'Slice the beef and serve with the sauce, red cabbage and potato dumplings.'],
+    'Plan ahead: the beef needs 2–3 days in the marinade.'),
+  R('koenigsberger-klopse', 'Königsberger Klopse (meatballs in caper sauce)', 'Dinner', 50, '4', { s: 'bowl', m: '#FFFFFF', b: '#F2EBD9', c: [['#B8A27A', 1.6, 8], ['#4F772D', .3, 14]] },
+    ['500 g minced beef or veal', '1 stale bread roll, soaked in water and squeezed', '1 small onion, finely chopped', '1 egg', '2 anchovy fillets, chopped (optional)', '1 litre beef stock', '30 g butter', '30 g plain flour', '100 ml cream', '3 tbsp capers', '1 tbsp lemon juice', '1 egg yolk', 'Salt and pepper'],
+    ['Mix the mince, bread, onion, egg, anchovies, salt and pepper, and shape into 12 meatballs.', 'Bring the stock to a gentle simmer and poach the meatballs for 15 minutes. Lift out and keep 600 ml of the stock.', 'Melt the butter, stir in the flour, then gradually whisk in the stock and simmer for 5 minutes.', 'Stir in the cream, capers and lemon juice. Take off the heat and stir in the egg yolk to enrich it.', 'Return the meatballs to warm through and serve with boiled potatoes and beetroot.']),
+  R('frikadellen', 'Frikadellen (German meat patties)', 'Dinner', 35, '4', { s: 'plate', c: [['#8B4A2B', 2, 4], '#F2D49B', '#7CB342'] },
+    ['500 g mixed minced beef and pork', '1 stale bread roll, soaked in water and squeezed', '1 onion, finely chopped', '1 egg', '1 tsp medium mustard', '1 tsp dried marjoram', '2 tbsp chopped parsley', '2 tbsp oil', 'Salt and pepper'],
+    ['Soften the onion in a little of the oil and let it cool.', 'Mix the mince, bread, onion, egg, mustard, marjoram, parsley, salt and pepper by hand.', 'Shape into 8 flattish patties with wet hands.', 'Fry in the remaining oil over medium heat for 5–6 minutes a side until browned and cooked through.', 'Serve hot or cold with mustard, potato salad or bread.']),
+  R('bratkartoffeln', 'Bratkartoffeln with fried eggs', 'Dinner', 35, '2', { s: 'pan', c: [['#E2A65E', 1.4, 12], '#C0392B'], e: 2, h: '#3E8E3A' },
+    ['600 g waxy potatoes, boiled the day before and sliced', '2 tbsp oil', '1 tbsp butter', '1 onion, sliced', '75 g bacon lardons', '½ tsp caraway seeds (optional)', '4 eggs', 'Parsley, chopped', 'Salt and pepper'],
+    ['Heat the oil in a large frying pan and add the potatoes in one layer. Fry over medium-high heat without stirring for 5 minutes until golden underneath.', 'Turn, add the butter, onion, bacon and caraway, and fry for 10 minutes more, turning now and then.', 'Season and keep warm.', 'Fry the eggs in a second pan.', 'Serve the potatoes topped with the eggs and parsley, with gherkins on the side.']),
+  R('currywurst', 'Currywurst', 'Dinner', 25, '4', { s: 'board', c: [['#B5523B', 1.6, 8], ['#C0392B', 1, 6], ['#F2D27A', 1.2, 8]] },
+    ['4 bratwurst', '1 tbsp oil', '1 small onion, finely chopped', '1 tbsp curry powder', '1 tsp sweet paprika', '300 ml passata', '2 tbsp ketchup', '1 tbsp sugar', '1 tbsp cider vinegar', '1 tsp Worcestershire sauce', 'Extra curry powder to dust', 'Chips or bread rolls to serve'],
+    ['Soften the onion in the oil for 5 minutes, then stir in the curry powder and paprika for 30 seconds.', 'Add the passata, ketchup, sugar, vinegar and Worcestershire sauce and simmer for 10 minutes. Blend until smooth.', 'Fry or grill the sausages until browned and cooked through, then slice.', 'Pour the sauce over the sausage and dust with more curry powder.', 'Serve with chips or a bread roll.']),
+  R('geschnetzeltes', 'Zürcher Geschnetzeltes (creamy mushroom chicken)', 'Dinner', 30, '4', { s: 'plate', b: '#EADBB8', c: [['#F2E4B0', 1.4, 8], '#8C6A4F'], h: '#3E8E3A' },
+    ['600 g chicken breast or veal, cut into thin strips', '2 tbsp butter', '1 onion, finely chopped', '250 g mushrooms, sliced', '1 tbsp plain flour', '100 ml white wine', '200 ml chicken stock', '200 ml cream', '1 tsp lemon juice', 'Parsley, chopped', 'Salt and pepper'],
+    ['Season the meat and brown it quickly in half the butter over high heat. Set aside.', 'Melt the rest of the butter and cook the onion and mushrooms for 6 minutes.', 'Stir in the flour, then the wine, stock and cream, and simmer for 5 minutes until thickened.', 'Return the meat and warm through for 2 minutes without boiling.', 'Add the lemon juice, season, and scatter with parsley. Serve with rösti, rice or noodles.']),
+  R('schupfnudeln', 'Schupfnudeln with sauerkraut & bacon', 'Dinner', 30, '4', { s: 'pan', c: [['#F2D27A', 1.2, 14], ['#EDE6C8', 1, 10], '#C0392B'], h: '#3E8E3A' },
+    ['500 g ready-made Schupfnudeln (potato noodles)', '2 tbsp butter', '150 g bacon lardons', '1 onion, sliced', '500 g sauerkraut, drained', '½ tsp caraway seeds', '100 ml vegetable stock', 'Salt and pepper'],
+    ['Fry the bacon and onion in half the butter until golden.', 'Add the sauerkraut, caraway and stock and simmer for 10 minutes.', 'Meanwhile fry the Schupfnudeln in the rest of the butter in a second pan until golden all over.', 'Toss the noodles with the sauerkraut and season.']),
+  R('huehnerfrikassee', 'Hühnerfrikassee (chicken fricassee)', 'Dinner', 50, '4', { s: 'plate', b: '#F4EFE6', c: [['#F2E4B0', 1.6, 6], '#7CB342', '#F28C28'], h: '#3E8E3A' },
+    ['600 g chicken breast', '1 litre chicken stock', '30 g butter', '30 g plain flour', '100 ml cream', '200 g mushrooms, sliced', '150 g frozen peas', '150 g asparagus tips or carrots', '1 tbsp lemon juice', '1 tbsp capers (optional)', 'Rice to serve', 'Salt and pepper'],
+    ['Simmer the chicken in the stock for 20 minutes, then lift out and cut into bite-sized pieces. Keep the stock.', 'Melt the butter, stir in the flour, and gradually whisk in 500 ml of the stock. Simmer for 5 minutes.', 'Add the mushrooms and asparagus and cook for 5 minutes, then the peas, cream and chicken for 3 minutes.', 'Stir in the lemon juice and capers and season.', 'Serve with rice.']),
+  R('lasagne', 'Classic lasagne', 'Dinner', 120, '6', { s: 'tray', b: '#C2462B', c: [['#F2D49B', 2, 4], '#A63D2A'], z: .8, h: '#3E8E3A' },
+    ['2 tbsp olive oil', '1 onion, chopped', '1 carrot, finely diced', '2 garlic cloves, chopped', '500 g minced beef', '2 tbsp tomato paste', '2 × 400 g tins chopped tomatoes', '1 tsp dried oregano', '50 g butter', '50 g plain flour', '700 ml milk', 'Pinch of nutmeg', '250 g lasagne sheets', '60 g parmesan, grated', 'Salt and pepper'],
+    ['Soften the onion and carrot in the oil for 8 minutes, add the garlic, then brown the mince. Stir in the tomato paste, tomatoes and oregano and simmer for 30 minutes. Season.', 'For the white sauce, melt the butter, stir in the flour, then whisk in the milk and simmer until thick. Season with nutmeg, salt and pepper.', 'Heat the oven to 190 °C.', 'In a baking dish, layer meat sauce, lasagne sheets and white sauce three times, finishing with white sauce. Scatter with parmesan.', 'Bake for 40 minutes until golden and bubbling. Rest for 10 minutes before cutting.']),
+  R('spaghetti-meatballs', 'Spaghetti & meatballs', 'Dinner', 45, '4', { s: 'plate', n: '#F2D27A', c: [['#A63D2A', 1.6, 6], '#D2432B'], h: '#3E8E3A' },
+    ['500 g minced beef', '50 g breadcrumbs', '1 egg', '30 g parmesan, grated, plus extra to serve', '2 garlic cloves, crushed', '2 tbsp olive oil', '1 onion, chopped', '2 × 400 g tins chopped tomatoes', '1 tsp sugar', '400 g spaghetti', '1 handful basil', 'Salt and pepper'],
+    ['Mix the mince, breadcrumbs, egg, parmesan, half the garlic, salt and pepper, and roll into 20 meatballs.', 'Brown the meatballs in the oil and set aside.', 'Soften the onion in the same pan, add the remaining garlic, the tomatoes and sugar, and simmer for 10 minutes.', 'Return the meatballs and simmer for 15 minutes more.', 'Cook the spaghetti, toss with some of the sauce, and serve topped with meatballs, basil and parmesan.']),
+  R('tikka-masala', 'Chicken tikka masala', 'Dinner', 50, '4', { s: 'bowl', m: '#2F6DB5', b: '#D9692B', c: [['#F2C49B', 1.4, 7]], z: .8, h: '#3B8E3E' },
+    ['600 g chicken thighs, cut into chunks', '150 g plain yogurt', '2 tsp garam masala', '1 tsp ground turmeric', '1 tsp chilli powder', '2 tbsp oil', '1 onion, chopped', '3 garlic cloves, crushed', '2 cm ginger, grated', '1 tsp ground cumin', '1 × 400 g tin chopped tomatoes', '150 ml cream', '1 handful coriander', 'Salt'],
+    ['Mix the chicken with the yogurt, half the garam masala, the turmeric, chilli and salt. Marinate for at least 20 minutes.', 'Grill or pan-fry the chicken in batches until charred at the edges.', 'Soften the onion in the oil for 8 minutes, then add the garlic, ginger, cumin and the rest of the garam masala for 1 minute.', 'Add the tomatoes and simmer for 10 minutes, then blend until smooth. Stir in the cream and chicken and simmer for 10 minutes.', 'Scatter with coriander and serve with rice or naan.']),
+  R('dal', 'Red lentil dal', 'Dinner', 35, '4', { s: 'bowl', m: '#FFFFFF', b: '#F2B33D', c: [['#C0392B', .4, 10]], z: .6, h: '#3B8E3E' },
+    ['250 g red lentils, rinsed', '1 litre water', '1 tsp ground turmeric', '2 tbsp oil or ghee', '1 onion, chopped', '3 garlic cloves, sliced', '2 cm ginger, grated', '1 tsp cumin seeds', '1 tsp garam masala', '1 tomato, chopped', '1 handful spinach', '½ lemon, juiced', 'Salt'],
+    ['Simmer the lentils with the water and turmeric for 20 minutes, stirring now and then, until soft and thick.', 'Meanwhile fry the cumin seeds in the oil for 30 seconds, then add the onion and cook until golden, about 10 minutes.', 'Add the garlic, ginger and garam masala for 1 minute, then the tomato for 3 minutes.', 'Stir the onion mixture and spinach into the lentils, season with salt and lemon juice.', 'Serve with rice or flatbread.']),
+  R('stroganoff', 'Beef stroganoff', 'Dinner', 30, '4', { s: 'plate', n: '#F2D27A', c: [['#8B4A2B', 1.2, 10], '#8C6A4F'], h: '#3E8E3A' },
+    ['500 g beef sirloin or rump, cut into thin strips', '2 tbsp oil', '20 g butter', '1 onion, sliced', '250 g mushrooms, sliced', '1 tsp paprika', '1 tbsp Dijon mustard', '200 ml beef stock', '150 ml sour cream', '300 g tagliatelle or rice', 'Parsley, chopped', 'Salt and pepper'],
+    ['Season the beef and sear it quickly in the oil over high heat in batches. Set aside.', 'Melt the butter and cook the onion and mushrooms for 8 minutes.', 'Stir in the paprika and mustard, then the stock, and simmer for 3 minutes.', 'Stir in the sour cream and beef and heat through gently without boiling.', 'Serve over tagliatelle or rice with parsley.']),
+  R('shepherds-pie', 'Shepherd’s pie', 'Dinner', 75, '6', { s: 'tray', b: '#F2D49B', c: [['#E9C46A', 1.6, 6], '#A63D2A'], z: .8 },
+    ['2 tbsp oil', '1 onion, chopped', '2 carrots, diced', '500 g minced lamb', '2 tbsp tomato paste', '1 tbsp Worcestershire sauce', '400 ml beef or lamb stock', '1 tsp dried thyme', '100 g frozen peas', '1 kg floury potatoes, peeled', '50 g butter', '100 ml milk', 'Salt and pepper'],
+    ['Soften the onion and carrots in the oil, then brown the lamb.', 'Stir in the tomato paste, Worcestershire sauce, stock and thyme and simmer for 25 minutes. Add the peas and season.', 'Boil the potatoes until soft, then mash with the butter and milk and season.', 'Heat the oven to 200 °C. Spoon the meat into a baking dish and top with the mash, roughing it up with a fork.', 'Bake for 25 minutes until golden and bubbling.']),
+  R('fish-chips', 'Oven fish & chips', 'Dinner', 50, '4', { s: 'tray', b: '#F4EFE6', c: [['#E9B44C', 2.2, 4], ['#F2C14E', .9, 14], '#7CB342'] },
+    ['1 kg floury potatoes, cut into chips', '3 tbsp oil', '4 white fish fillets (cod or haddock)', '50 g plain flour', '1 egg, beaten', '80 g panko breadcrumbs', '1 lemon, cut into wedges', '300 g frozen peas', '15 g butter', 'Salt and pepper'],
+    ['Heat the oven to 220 °C. Toss the chips with 2 tbsp oil and salt and roast for 40 minutes, turning halfway.', 'Season the fish and coat in flour, then egg, then breadcrumbs.', 'Lay the fish on a lined tray, drizzle with the remaining oil, and bake for the last 15 minutes of the chips’ time.', 'Cook the peas, then crush them roughly with the butter, salt and pepper.', 'Serve the fish and chips with the crushed peas and lemon wedges.']),
+  R('paella', 'Chicken & chorizo paella', 'Dinner', 50, '4', { s: 'pan', b: '#F2B33D', c: ['#C0392B', '#7CB342', '#F2C49B', '#E63946'], h: '#3E8E3A' },
+    ['2 tbsp olive oil', '4 chicken thighs, boneless, cut into chunks', '100 g chorizo, sliced', '1 onion, chopped', '1 red pepper, sliced', '2 garlic cloves, chopped', '1 tsp smoked paprika', 'Pinch of saffron', '300 g paella rice', '900 ml hot chicken stock', '150 g frozen peas', '200 g raw prawns (optional)', '1 lemon, cut into wedges', 'Salt'],
+    ['Brown the chicken and chorizo in the oil in a large wide pan. Set aside.', 'Soften the onion and pepper for 5 minutes, then add the garlic and paprika.', 'Stir in the rice to coat, then add the saffron, stock and chicken and chorizo. Season and simmer, without stirring, for 15 minutes.', 'Scatter over the peas and prawns, pressing them in, and cook for 5–8 minutes more until the rice is tender and a crust forms underneath.', 'Rest for 5 minutes under a tea towel, then serve with lemon wedges.']),
+  R('jambalaya', 'Jambalaya', 'Dinner', 50, '4', { s: 'pan', b: '#C8553D', c: ['#C0392B', '#7CB342', '#F2C49B', '#F2E2B5'], h: '#3E8E3A' },
+    ['2 tbsp oil', '3 chicken thighs, boneless, diced', '150 g smoked sausage or chorizo, sliced', '1 onion, chopped', '1 green pepper, diced', '2 celery sticks, diced', '2 garlic cloves, chopped', '2 tsp Cajun seasoning', '250 g long-grain rice', '1 × 400 g tin chopped tomatoes', '600 ml chicken stock', '200 g raw prawns', '3 spring onions, sliced', 'Salt'],
+    ['Brown the chicken and sausage in the oil, then set aside.', 'Cook the onion, pepper and celery for 8 minutes, then add the garlic and Cajun seasoning.', 'Stir in the rice, tomatoes, stock, chicken and sausage. Cover and simmer for 18 minutes.', 'Stir in the prawns, cover, and cook for 5 minutes until pink and the rice is tender.', 'Season and scatter with spring onions.']),
+  R('moussaka', 'Moussaka', 'Dinner', 110, '6', { s: 'tray', b: '#E9C27A', c: [['#F2D49B', 2, 4], '#6B2C5C', '#A63D2A'], z: .8 },
+    ['3 aubergines, sliced 1 cm thick', '5 tbsp olive oil', '1 onion, chopped', '2 garlic cloves, chopped', '500 g minced lamb', '1 tsp ground cinnamon', '1 tsp dried oregano', '2 tbsp tomato paste', '1 × 400 g tin chopped tomatoes', '50 g butter', '50 g plain flour', '500 ml milk', '1 egg', '50 g parmesan or kefalotyri, grated', 'Salt and pepper'],
+    ['Heat the oven to 200 °C. Brush the aubergine slices with oil, season, and roast on trays for 25 minutes until soft and golden.', 'Soften the onion in the remaining oil, add the garlic and lamb and brown. Add the cinnamon, oregano, tomato paste and tomatoes and simmer for 25 minutes. Season.', 'For the topping, melt the butter, stir in the flour, then whisk in the milk and simmer until thick. Cool slightly, then beat in the egg and half the cheese.', 'Layer aubergine and meat sauce in a baking dish, finishing with aubergine. Spread over the topping and scatter with the rest of the cheese.', 'Lower the oven to 180 °C and bake for 40 minutes until golden. Rest for 15 minutes before cutting.']),
+  R('ratatouille', 'Ratatouille', 'Dinner', 60, '4', { s: 'pan', b: '#C2462B', c: ['#6B2C5C', '#7CB342', '#F2C14E', '#E63946'], h: '#3E8E3A' },
+    ['4 tbsp olive oil', '1 onion, chopped', '1 aubergine, diced', '2 courgettes, diced', '2 peppers (1 red, 1 yellow), diced', '3 garlic cloves, chopped', '1 × 400 g tin chopped tomatoes', '1 tsp herbes de Provence', '1 handful basil', 'Salt and pepper'],
+    ['Fry the aubergine in half the oil until browned, then set aside.', 'Fry the courgettes in a little more oil until golden, and set aside.', 'Cook the onion and peppers in the remaining oil for 10 minutes, then add the garlic.', 'Add the tomatoes, herbs, aubergine and courgettes and simmer gently for 25 minutes.', 'Season and tear in the basil. Serve with crusty bread, rice or as a side.'],
+    'Cooking the vegetables separately first keeps them from turning to mush.'),
+  R('katsu-curry', 'Chicken katsu curry', 'Dinner', 50, '4', { s: 'plate', b: '#B86B25', c: [['#E2A65E', 2, 4], '#FAF7F0'], h: '#3E8E3A' },
+    ['1 tbsp oil', '1 onion, chopped', '2 carrots, chopped', '2 garlic cloves, chopped', '2 tbsp mild curry powder', '1 tbsp plain flour', '500 ml chicken stock', '1 tbsp soy sauce', '1 tbsp honey', '4 chicken breasts, flattened slightly', '50 g plain flour, for coating', '2 eggs, beaten', '100 g panko breadcrumbs', 'Oil for frying', 'Rice to serve'],
+    ['Soften the onion and carrots in the oil for 10 minutes, add the garlic, curry powder and flour, and stir for 1 minute.', 'Add the stock, soy sauce and honey and simmer for 15 minutes, then blend until smooth.', 'Coat the chicken in flour, then egg, then panko.', 'Shallow-fry in 1 cm of oil for 5–6 minutes a side until golden and cooked through. Drain and slice.', 'Serve the chicken on rice with the curry sauce poured alongside.']),
+  R('bibimbap', 'Bibimbap', 'Dinner', 45, '2', { s: 'bowl', m: '#2B2B2B', b: '#FAF7F0', c: ['#F28C28', '#2E7D32', '#8B4A2B', '#F2E2B5', '#D9314A'], e: 1 },
+    ['150 g short-grain rice', '200 g beef mince or thinly sliced steak', '2 tbsp soy sauce', '1 tsp sugar', '1 garlic clove, crushed', '2 tsp sesame oil', '1 carrot, cut into matchsticks', '100 g spinach', '100 g bean sprouts', '1 courgette, cut into matchsticks', '2 eggs', '2 tbsp gochujang', '1 tsp sesame seeds'],
+    ['Cook the rice.', 'Mix the beef with the soy sauce, sugar, garlic and 1 tsp sesame oil, then stir-fry until browned.', 'Quickly stir-fry or blanch the carrot, spinach, bean sprouts and courgette separately, seasoning each with a few drops of sesame oil and salt.', 'Fry the eggs sunny side up.', 'Divide the rice between bowls, arrange the vegetables and beef on top, add an egg, and serve with gochujang and sesame seeds. Mix everything together to eat.']),
+  R('kung-pao', 'Kung pao chicken', 'Dinner', 25, '3', { s: 'pan', c: [['#B5523B', 1.4, 8], ['#E9C46A', .6, 10], '#C0392B', '#7CB342'] },
+    ['500 g chicken thighs, diced', '1 tbsp cornflour', '2 tbsp soy sauce', '1 tbsp rice vinegar', '1 tbsp sugar', '1 tsp cornflour mixed with 3 tbsp water', '2 tbsp oil', '6–8 dried red chillies', '1 tsp Sichuan peppercorns (optional)', '3 garlic cloves, sliced', '2 cm ginger, sliced', '4 spring onions, cut into lengths', '60 g roasted peanuts'],
+    ['Toss the chicken with the cornflour and 1 tbsp of the soy sauce.', 'Mix the remaining soy sauce, vinegar, sugar and cornflour water into a sauce.', 'Heat the oil in a wok, fry the chillies and peppercorns for a few seconds, then add the chicken and stir-fry until cooked, about 5 minutes.', 'Add the garlic, ginger and spring onions for 1 minute.', 'Pour in the sauce, toss until glossy, and stir in the peanuts. Serve with rice.']),
+  R('stuffed-peppers', 'Stuffed peppers', 'Dinner', 60, '4', { s: 'tray', b: '#E8D3A8', c: [['#E63946', 2.2, 2], ['#F2C14E', 2.2, 2]], h: '#3E8E3A' },
+    ['4 large peppers', '1 tbsp oil', '1 onion, chopped', '400 g minced beef', '2 garlic cloves, chopped', '1 tsp paprika', '150 g cooked rice', '1 × 400 g tin chopped tomatoes', '100 g cheese, grated', 'Salt and pepper'],
+    ['Heat the oven to 190 °C. Cut the tops off the peppers and scoop out the seeds.', 'Soften the onion in the oil, add the beef and garlic and brown, then stir in the paprika.', 'Mix in the rice and half the tomatoes and season.', 'Stand the peppers in a dish, fill them, pour the rest of the tomatoes around, and put the tops back on.', 'Cover with foil and bake for 30 minutes, then uncover, top with cheese and bake for 10 minutes more.']),
+  R('enchiladas', 'Chicken enchiladas', 'Dinner', 50, '4', { s: 'tray', b: '#C2462B', c: [['#F3D9A4', 2, 4], ['#F2C14E', 1, 8], '#9BC53D'], h: '#3E8E3A' },
+    ['1 tbsp oil', '1 onion, chopped', '2 garlic cloves, chopped', '2 tsp ground cumin', '1 tsp chilli powder', '2 × 400 g tins chopped tomatoes', '300 g cooked chicken, shredded', '1 × 400 g tin black beans, drained', '8 small flour tortillas', '150 g cheddar, grated', '100 g sour cream', '1 handful coriander'],
+    ['Soften the onion in the oil, add the garlic, cumin and chilli, then the tomatoes. Simmer for 10 minutes and blend into a sauce.', 'Heat the oven to 200 °C.', 'Mix the chicken and beans with a third of the sauce and half the cheese.', 'Fill and roll the tortillas and lay them seam-side down in a baking dish. Pour over the rest of the sauce and scatter with the remaining cheese.', 'Bake for 20 minutes until bubbling. Serve with sour cream and coriander.']),
+  R('burgers', 'Homemade beef burgers', 'Dinner', 30, '4', { s: 'board', c: [['#E2A65E', 2.2, 2], ['#7B3F20', 1.6, 2], '#7CB342', '#E63946'] },
+    ['600 g minced beef (about 20% fat)', '1 tsp salt', '½ tsp pepper', '4 slices cheddar', '4 brioche buns', '1 tomato, sliced', '4 lettuce leaves', '1 red onion, sliced', 'Pickles, ketchup and mustard'],
+    ['Divide the beef into 4, shape into patties slightly wider than the buns, and press a dent in the middle of each.', 'Season both sides just before cooking.', 'Cook in a very hot pan or on a grill for 3–4 minutes a side, adding the cheese for the last minute.', 'Toast the buns.', 'Build the burgers with lettuce, tomato, onion, pickles and sauces.']),
+  R('shawarma', 'Chicken shawarma wraps', 'Dinner', 40, '4', { s: 'board', c: [['#F3E1B6', 2.6, 2], ['#C68B59', 1.2, 8], '#E63946', '#7CB342'] },
+    ['700 g chicken thighs, boneless', '3 tbsp olive oil', '1 lemon, juiced', '3 garlic cloves, crushed', '2 tsp ground cumin', '2 tsp paprika', '1 tsp ground coriander', '½ tsp ground cinnamon', '½ tsp turmeric', '4 large flatbreads', '150 g plain yogurt mixed with 1 crushed garlic clove', 'Tomato, cucumber, red onion and lettuce', 'Salt'],
+    ['Mix the oil, lemon juice, garlic, spices and salt and coat the chicken. Marinate for at least 30 minutes.', 'Heat the oven to 220 °C and roast the chicken on a tray for 25 minutes until charred at the edges.', 'Rest for 5 minutes, then slice thinly.', 'Warm the flatbreads.', 'Fill with chicken, salad and garlic yogurt, and roll up.']),
+  R('pasta-norma', 'Pasta alla Norma', 'Dinner', 40, '4', { s: 'plate', n: '#F2D27A', c: [['#6B2C5C', 1.2, 8], ['#D2432B', 1, 6], '#FFFFFF'], h: '#2E7D32' },
+    ['2 aubergines, cut into chunks', '5 tbsp olive oil', '3 garlic cloves, sliced', '½ tsp chilli flakes', '2 × 400 g tins chopped tomatoes', '1 tsp sugar', '400 g rigatoni or penne', '1 handful basil', '60 g ricotta salata or parmesan, grated', 'Salt'],
+    ['Fry the aubergine in 4 tbsp of the oil in batches until golden and soft. Season with salt.', 'In the same pan, cook the garlic and chilli in the remaining oil for 1 minute, then add the tomatoes and sugar and simmer for 15 minutes.', 'Return the aubergine to the sauce.', 'Cook the pasta, drain, and toss with the sauce and torn basil.', 'Serve with grated cheese on top.']),
+  R('arrabbiata', 'Penne arrabbiata', 'Dinner', 25, '4', { s: 'plate', n: '#D2432B', c: [['#E04A2F', .8, 10]], h: '#2E7D32' },
+    ['4 tbsp olive oil', '4 garlic cloves, sliced', '1–2 tsp chilli flakes', '2 × 400 g tins chopped tomatoes', '1 tsp sugar', '400 g penne', '1 handful parsley', 'Parmesan to serve', 'Salt'],
+    ['Warm the oil with the garlic and chilli over low heat until the garlic is lightly golden.', 'Add the tomatoes, sugar and salt and simmer for 15 minutes until thick.', 'Cook the penne until al dente.', 'Toss the pasta with the sauce and a splash of pasta water.', 'Serve with parsley and parmesan.']),
+  R('prawn-linguine', 'Garlic prawn linguine', 'Dinner', 20, '2', { s: 'plate', n: '#F2D27A', c: [['#F28482', 1.2, 8], '#E63946'], h: '#2E7D32' },
+    ['200 g linguine', '3 tbsp olive oil', '3 garlic cloves, sliced', '½ tsp chilli flakes', '200 g raw peeled prawns', '150 g cherry tomatoes, halved', '50 ml white wine', '½ lemon, zest and juice', '1 handful parsley, chopped', 'Salt'],
+    ['Cook the linguine in salted water.', 'Meanwhile warm the oil, garlic and chilli gently for 1 minute.', 'Add the prawns and tomatoes and cook for 2–3 minutes until the prawns turn pink.', 'Pour in the wine and let it bubble for 1 minute.', 'Toss in the drained pasta with a splash of pasta water, the lemon and parsley, and season.']),
+  R('chicken-satay', 'Chicken satay with peanut sauce', 'Dinner', 40, '4', { s: 'board', c: [['#C68B59', 1.4, 10], ['#B86B25', 1, 4], '#7CB342'] },
+    ['600 g chicken thighs, cut into strips', '2 tbsp soy sauce', '1 tbsp honey', '1 tsp ground turmeric', '1 tsp ground coriander', '1 garlic clove, crushed', '4 tbsp peanut butter', '200 ml coconut milk', '1 tbsp sweet chilli sauce', '1 lime, juiced', 'Cucumber and rice to serve'],
+    ['Mix the soy sauce, honey, turmeric, coriander and garlic, and toss with the chicken. Marinate for 20 minutes.', 'Thread onto skewers (soak wooden ones in water first).', 'Grill or griddle for 8–10 minutes, turning, until charred and cooked through.', 'Warm the peanut butter, coconut milk, sweet chilli and lime juice together, stirring, into a smooth sauce.', 'Serve the skewers with the sauce, cucumber and rice.']),
+  R('mapo-tofu', 'Mapo tofu', 'Dinner', 25, '3', { s: 'bowl', m: '#FFFFFF', b: '#B5321F', c: [['#F5F5F0', 1, 10], '#2E7D32'], z: .7 },
+    ['400 g silken or soft tofu, cubed', '1 tbsp oil', '150 g minced pork', '2 garlic cloves, chopped', '2 cm ginger, chopped', '2 tbsp chilli bean paste (doubanjiang)', '1 tsp ground Sichuan pepper', '250 ml chicken stock', '1 tbsp soy sauce', '1 tsp sugar', '2 tsp cornflour mixed with 2 tbsp water', '2 spring onions, sliced'],
+    ['Gently simmer the tofu in salted water for 2 minutes, then drain.', 'Fry the pork in the oil until browned, then add the garlic, ginger and chilli bean paste for 1 minute.', 'Add the stock, soy sauce and sugar, then slide in the tofu and simmer for 5 minutes.', 'Stir in the cornflour mixture to thicken.', 'Sprinkle with Sichuan pepper and spring onions, and serve with rice.']),
+  R('bourguignon', 'Beef bourguignon', 'Dinner', 180, '6', { s: 'bowl', m: '#F4EFE6', b: '#5A1F14', c: [['#7B3F20', 1.6, 6], '#F28C28', '#8C6A4F'], z: .8, h: '#3E8E3A' },
+    ['1.2 kg beef chuck, cut into large chunks', '2 tbsp plain flour', '3 tbsp oil', '150 g bacon lardons', '2 carrots, cut into chunks', '1 onion, chopped', '2 garlic cloves, crushed', '1 tbsp tomato paste', '750 ml red wine', '300 ml beef stock', '2 thyme sprigs and 2 bay leaves', '250 g small mushrooms', '12 small shallots, peeled', '20 g butter', 'Salt and pepper'],
+    ['Heat the oven to 160 °C. Toss the beef in seasoned flour and brown in batches in the oil in a casserole. Set aside.', 'Fry the bacon, carrots and onion for 8 minutes, then add the garlic and tomato paste.', 'Return the beef, add the wine, stock and herbs, and bring to a simmer. Cover and cook in the oven for 2½ hours until tender.', 'Fry the mushrooms and shallots in the butter until golden and stir them in for the last 30 minutes.', 'Season and serve with mash or crusty bread.']),
+  R('tortilla-espanola', 'Tortilla española', 'Dinner', 50, '4', { s: 'pan', b: '#F2D27A', c: [['#F6DB8A', 1.6, 6]], h: '#3E8E3A' },
+    ['600 g waxy potatoes, peeled and thinly sliced', '1 onion, thinly sliced', '150 ml olive oil', '6 eggs', 'Salt'],
+    ['Gently cook the potatoes and onion in the oil in a 24 cm frying pan over low heat, turning now and then, for 20 minutes until tender but not browned.', 'Drain, keeping the oil, and mix the potatoes with the beaten eggs and a good pinch of salt. Leave for 10 minutes.', 'Heat 2 tbsp of the oil in the pan, pour in the mixture, and cook over low heat for 8 minutes until the edges set.', 'Put a plate on top, flip the tortilla onto it, and slide it back into the pan to cook the other side for 4–5 minutes.', 'Serve warm or at room temperature, cut into wedges.']),
+  R('chicken-pot-pie', 'Chicken & leek pot pie', 'Dinner', 60, '4', { s: 'tray', b: '#E9B44C', c: [['#D9A05B', 2.4, 3], '#F4F1DE'] },
+    ['30 g butter', '2 leeks, sliced', '2 carrots, diced', '150 g mushrooms, sliced', '30 g plain flour', '400 ml chicken stock', '100 ml cream', '400 g cooked chicken, chopped', '100 g frozen peas', '1 tsp dried thyme', '320 g ready-rolled puff pastry', '1 egg, beaten', 'Salt and pepper'],
+    ['Heat the oven to 200 °C.', 'Melt the butter and soften the leeks, carrots and mushrooms for 10 minutes.', 'Stir in the flour, then gradually add the stock and cream and simmer until thick.', 'Add the chicken, peas and thyme, season, and spoon into a pie dish.', 'Cover with the pastry, trim, brush with egg, cut a steam hole, and bake for 25–30 minutes until golden.']),
+  R('mac-cheese', 'Baked mac and cheese', 'Dinner', 45, '4', { s: 'tray', b: '#F2C14E', c: [['#E9B44C', 1, 12], '#C98A3E'] },
+    ['300 g macaroni', '50 g butter', '50 g plain flour', '750 ml milk', '1 tsp mustard powder or Dijon mustard', '250 g mature cheddar, grated', '50 g parmesan, grated', '40 g breadcrumbs', 'Salt and pepper'],
+    ['Heat the oven to 200 °C. Cook the macaroni for 2 minutes less than the packet says and drain.', 'Melt the butter, stir in the flour, then whisk in the milk and simmer for 5 minutes until thick.', 'Take off the heat and stir in the mustard, most of the cheddar and half the parmesan. Season.', 'Mix with the pasta and tip into a baking dish.', 'Scatter with the breadcrumbs and remaining cheese and bake for 20 minutes until golden.']),
+  R('pad-kra-pao', 'Thai basil chicken (pad kra pao)', 'Dinner', 20, '2', { s: 'plate', c: [['#B5523B', 1, 12], '#2E7D32', '#E63946'], e: 2 },
+    ['1 tbsp oil', '3 garlic cloves, chopped', '2 red chillies, chopped', '300 g minced chicken or pork', '1 tbsp oyster sauce', '1 tbsp soy sauce', '1 tsp fish sauce', '1 tsp sugar', '2 handfuls Thai or ordinary basil', '2 eggs', 'Rice to serve'],
+    ['Stir-fry the garlic and chillies in the oil for 30 seconds.', 'Add the mince and stir-fry until browned and cooked through.', 'Add the oyster sauce, soy sauce, fish sauce and sugar and toss for 1 minute.', 'Stir in the basil until wilted.', 'Fry the eggs until crispy at the edges and serve on top of the rice and chicken.']),
+  // Dessert (more)
+  R('kaesekuchen', 'Käsekuchen (German cheesecake)', 'Dessert', 100, '12', { s: 'pizza', b: '#F6E7A8', c: [['#E9C46A', .6, 6]] },
+    ['125 g butter, softened', '200 g sugar', '1 egg yolk', '250 g plain flour', '1 tsp baking powder', '1 kg quark', '4 eggs', '1 lemon, zest and juice', '40 g cornflour', '1 tsp vanilla extract', '200 ml cream'],
+    ['Rub the butter, 75 g of the sugar, the egg yolk, flour and baking powder into a dough. Press into the base and 3 cm up the sides of a 26 cm springform tin. Chill.', 'Heat the oven to 170 °C.', 'Beat the quark, eggs, remaining sugar, lemon, cornflour and vanilla until smooth, then stir in the cream.', 'Pour onto the base and bake for 60–70 minutes until set with a slight wobble.', 'Turn off the oven and leave the cake inside with the door ajar for 30 minutes so it doesn’t crack, then cool completely.']),
+  R('apfelstrudel', 'Apfelstrudel', 'Dessert', 60, '8', { s: 'board', c: [['#E2B36A', 2.6, 2], ['#F5F5F0', .3, 20], '#C98A3E'] },
+    ['1 kg sharp apples, peeled and thinly sliced', '75 g sugar', '1 tsp ground cinnamon', '50 g raisins', '50 g breadcrumbs, toasted in 20 g butter', '1 lemon, juiced', '6 sheets filo pastry', '60 g butter, melted', 'Icing sugar to dust'],
+    ['Heat the oven to 190 °C and line a tray with baking paper.', 'Mix the apples, sugar, cinnamon, raisins and lemon juice.', 'Lay out the filo sheets overlapping on a clean tea towel, brushing each with butter, to make a large rectangle.', 'Scatter the breadcrumbs over, then spread the apples along one long side. Use the towel to roll it up tightly and lift it onto the tray seam-side down.', 'Brush with butter and bake for 35–40 minutes until golden. Dust with icing sugar and serve warm with vanilla sauce or ice cream.']),
+  R('kaiserschmarrn', 'Kaiserschmarrn', 'Dessert', 25, '2', { s: 'pan', c: [['#E2B36A', 1.4, 12], ['#F5F5F0', .4, 16], '#C0392B'] },
+    ['3 eggs, separated', '1 tbsp sugar', 'Pinch of salt', '125 g plain flour', '200 ml milk', '30 g raisins', '30 g butter', 'Icing sugar to dust', 'Plum compote or apple sauce to serve'],
+    ['Whisk the egg yolks with the milk, then stir in the flour.', 'Whisk the egg whites with the sugar and salt to stiff peaks and fold into the batter.', 'Melt half the butter in a large pan, pour in the batter, and scatter with raisins. Cook over medium heat for 4 minutes until golden underneath.', 'Flip in pieces, add the rest of the butter, and tear the pancake into bite-sized chunks with two forks. Cook for 3 minutes more, tossing, until golden.', 'Dust generously with icing sugar and serve with compote.']),
+  R('rote-gruetze', 'Rote Grütze (red berry pudding)', 'Dessert', 20, '4', { s: 'jar', b: '#8E1F2F', c: ['#F5F0E6', '#C0392B', '#5B2A86'] },
+    ['500 g mixed red berries (fresh or frozen)', '200 ml red fruit juice (cherry or redcurrant)', '50 g sugar', '2 tbsp cornflour', '1 tsp vanilla extract', 'Vanilla sauce, cream or yogurt to serve'],
+    ['Heat the juice and sugar in a pan with half the berries until simmering.', 'Mix the cornflour with 3 tbsp cold water, stir in, and cook for 1 minute until thickened.', 'Take off the heat and stir in the remaining berries and the vanilla.', 'Pour into glasses and chill for at least 2 hours.', 'Serve with vanilla sauce or cream.']),
+  R('zwetschgenkuchen', 'Zwetschgenkuchen (plum sheet cake)', 'Dessert', 90, '12', { s: 'tray', b: '#E9C27A', c: [['#5B2A86', 1.2, 16], '#8E3B8E'] },
+    ['400 g plain flour', '7 g dried yeast', '50 g sugar, plus 3 tbsp to sprinkle', '200 ml warm milk', '1 egg', '50 g butter, melted', 'Pinch of salt', '1.5 kg plums, halved and stoned', '1 tsp ground cinnamon'],
+    ['Mix the flour, yeast, 50 g sugar, milk, egg, butter and salt and knead into a soft dough. Cover and leave for 45 minutes.', 'Heat the oven to 200 °C. Roll the dough out to fit a greased baking tray.', 'Arrange the plums tightly in rows, cut-side up, pressing them in slightly.', 'Leave for 15 minutes, then bake for 30–35 minutes until the base is golden.', 'Sprinkle with the remaining sugar mixed with cinnamon while warm. Serve with whipped cream.']),
+  R('tiramisu', 'Tiramisu', 'Dessert', 30, '6', { s: 'tray', b: '#F4EAD5', c: [['#5C3420', .4, 24]] },
+    ['3 eggs, separated', '75 g sugar', '500 g mascarpone', '300 ml strong coffee, cooled', '3 tbsp coffee liqueur or marsala (optional)', '200 g sponge fingers (savoiardi)', '2 tbsp cocoa powder'],
+    ['Whisk the egg yolks and sugar until pale and thick, then beat in the mascarpone.', 'Whisk the egg whites to stiff peaks and fold into the mascarpone mixture.', 'Mix the coffee and liqueur. Dip each sponge finger briefly and lay half in a dish.', 'Spread over half the cream, then repeat the layers.', 'Chill for at least 4 hours, and dust with cocoa before serving.'],
+    'Uses raw eggs; choose very fresh ones.'),
+  R('creme-brulee', 'Crème brûlée', 'Dessert', 60, '4', { s: 'mug', m: '#FFFFFF', b: '#E9B44C', c: [['#C98A3E', .6, 8]] },
+    ['500 ml double cream', '1 vanilla pod, split, or 1 tsp vanilla paste', '5 egg yolks', '60 g sugar, plus 4 tbsp for the tops'],
+    ['Heat the oven to 150 °C. Warm the cream with the vanilla until steaming.', 'Whisk the yolks and 60 g sugar, then slowly whisk in the hot cream. Strain into 4 ramekins.', 'Set the ramekins in a roasting tin, pour hot water halfway up, and bake for 30–35 minutes until just set with a wobble.', 'Cool, then chill for at least 3 hours.', 'Sprinkle each with a tablespoon of sugar and caramelise with a blowtorch or under a very hot grill.']),
+  R('pavlova', 'Berry pavlova', 'Dessert', 120, '8', { s: 'plate', b: '#FFFDF5', c: ['#D9314A', '#3D3B8E', '#E63946', '#7CB342'] },
+    ['4 egg whites', '220 g caster sugar', '1 tsp cornflour', '1 tsp white wine vinegar', '300 ml double cream', '400 g mixed berries', 'Mint leaves to decorate'],
+    ['Heat the oven to 140 °C and draw a 22 cm circle on baking paper on a tray.', 'Whisk the egg whites to stiff peaks, then whisk in the sugar a spoonful at a time until thick and glossy. Fold in the cornflour and vinegar.', 'Spread inside the circle, making a slight hollow in the middle.', 'Bake for 1 hour, then turn off the oven and leave the pavlova inside to cool completely.', 'Whip the cream softly, spoon onto the meringue, and pile on the berries and mint just before serving.']),
+  R('panna-cotta', 'Vanilla panna cotta', 'Dessert', 20, '4', { s: 'plate', b: '#FFFDF5', c: [['#F4F1DE', 2.6, 1], '#D9314A'] },
+    ['3 gelatine leaves', '400 ml double cream', '100 ml milk', '50 g sugar', '1 tsp vanilla paste', '200 g berries to serve'],
+    ['Soak the gelatine in cold water for 5 minutes.', 'Heat the cream, milk, sugar and vanilla until steaming but not boiling.', 'Squeeze out the gelatine and stir it into the hot cream until dissolved.', 'Pour into 4 lightly oiled moulds or glasses and chill for at least 4 hours until set.', 'Turn out onto plates, or serve in the glasses, with berries.']),
+  R('sticky-toffee', 'Sticky toffee pudding', 'Dessert', 55, '6', { s: 'bowl', m: '#FFFFFF', b: '#7A4A2B', c: [['#5C3420', 2, 3]], z: .8 },
+    ['175 g pitted dates, chopped', '250 ml boiling water', '1 tsp bicarbonate of soda', '75 g butter, softened', '150 g light brown sugar', '2 eggs', '175 g self-raising flour', '1 tsp vanilla extract', '150 g dark brown sugar (for the sauce)', '75 g butter (for the sauce)', '200 ml double cream (for the sauce)'],
+    ['Heat the oven to 180 °C and grease a baking dish. Soak the dates in the boiling water with the bicarbonate for 10 minutes.', 'Beat the butter and light brown sugar, then beat in the eggs, flour and vanilla. Stir in the dates and their liquid.', 'Pour into the dish and bake for 30 minutes until risen and springy.', 'For the sauce, simmer the dark brown sugar, butter and cream for 3 minutes until glossy.', 'Pour some sauce over the warm pudding and serve the rest alongside, with ice cream.']),
+  R('milchreis', 'Milchreis (rice pudding)', 'Dessert', 40, '4', { s: 'bowl', m: '#3A86FF', b: '#FAF7F0', c: [['#C98A3E', .5, 10], '#C0392B'] },
+    ['200 g pudding or risotto rice', '1 litre milk', '3 tbsp sugar', '1 tsp vanilla extract', 'Pinch of salt', '1 tbsp butter', 'Cinnamon sugar and cherries or apple sauce to serve'],
+    ['Bring the milk, sugar, vanilla and salt to the boil in a heavy pan.', 'Stir in the rice and simmer very gently, stirring often, for 30–35 minutes until creamy and tender.', 'Stir in the butter.', 'Serve warm with cinnamon sugar and cherries or apple sauce.'],
+    'Keep the heat low and stir often so it doesn’t catch on the bottom.'),
+  R('carrot-cake', 'Carrot cake', 'Dessert', 90, '12', { s: 'board', c: [['#C98A3E', 2.6, 2], ['#FFFDF5', 2.2, 2], '#F28C28'] },
+    ['250 g light brown sugar', '3 eggs', '200 ml sunflower oil', '250 g self-raising flour', '1 tsp bicarbonate of soda', '2 tsp ground cinnamon', '½ tsp ground nutmeg', '300 g carrots, grated', '100 g walnuts, chopped', '200 g cream cheese', '50 g soft butter', '150 g icing sugar', '1 tsp vanilla extract'],
+    ['Heat the oven to 180 °C and line a 20 × 30 cm tin.', 'Whisk the sugar, eggs and oil, then fold in the flour, bicarbonate and spices.', 'Stir in the carrots and most of the walnuts and pour into the tin.', 'Bake for 35–40 minutes until a skewer comes out clean. Cool completely.', 'Beat the cream cheese, butter, icing sugar and vanilla, spread over the cake, and scatter with the remaining walnuts.']),
+  R('crepes', 'Crêpes', 'Dessert', 30, '4', { s: 'plate', c: [['#F2D49B', 2.6, 2], '#5C3420', '#F4D35E'] },
+    ['125 g plain flour', '2 eggs', '300 ml milk', '1 tbsp sugar', 'Pinch of salt', '20 g butter, melted, plus extra for the pan', 'Lemon and sugar, or chocolate spread, to serve'],
+    ['Whisk the flour, eggs, milk, sugar and salt until smooth, then stir in the melted butter. Rest for 15 minutes.', 'Heat a non-stick pan over medium-high heat and wipe with a little butter.', 'Pour in a small ladle of batter and swirl to coat the pan thinly.', 'Cook for 1 minute until golden underneath, flip, and cook for 30 seconds more.', 'Fill or fold with lemon and sugar, chocolate spread or fruit.']),
+  R('bratapfel', 'Bratäpfel (baked apples)', 'Dessert', 45, '4', { s: 'tray', b: '#E8D3A8', c: [['#C0392B', 2.4, 4], '#C98A3E'] },
+    ['4 large apples', '40 g raisins', '40 g chopped almonds or walnuts', '2 tbsp honey', '1 tsp ground cinnamon', '30 g butter', 'Vanilla sauce or yogurt to serve'],
+    ['Heat the oven to 180 °C.', 'Core the apples, leaving the bottoms intact, and score the skin around the middle.', 'Mix the raisins, nuts, honey and cinnamon and stuff into the apples.', 'Stand them in a baking dish, top each with butter, and add a splash of water to the dish.', 'Bake for 30–35 minutes until soft. Serve warm with vanilla sauce.']),
+
+  // Added on request
+  R('glasnudelsalat', 'Glasnudelsalat (glass noodle salad)', 'Lunch', 25, '4', { s: 'bowl', m: '#FFFFFF', b: '#F4F1DE', c: ['#F28C28', '#E63946', '#7CB342', '#F28482'], h: '#2D6A4F' },
+    ['200 g glass noodles (mung bean vermicelli)', '1 carrot, cut into matchsticks', '1 red pepper, thinly sliced', '½ cucumber, cut into matchsticks', '3 spring onions, sliced', '200 g cooked prawns or chicken (optional)', '1 handful coriander and mint', '1 garlic clove, crushed', '1 red chilli, finely chopped', '3 tbsp lime juice', '2 tbsp fish sauce or soy sauce', '1 tbsp sugar', '1 tbsp sesame oil', '2 tbsp roasted peanuts, chopped'],
+    ['Soak or cook the glass noodles as the packet says, rinse in cold water, drain well and snip into shorter lengths with scissors.', 'Whisk the garlic, chilli, lime juice, fish sauce, sugar and sesame oil into a dressing.', 'Toss the noodles with the vegetables, prawns and most of the herbs.', 'Pour over the dressing and toss again.', 'Scatter with the remaining herbs and the peanuts.'],
+    'Tastes even better after 30 minutes in the fridge.'),
+  R('pflaumen-oliven-huhn', 'Hähnchen in Pflaumen-Oliven-Marinade (chicken with prunes & olives)', 'Dinner', 75, '4', { s: 'tray', b: '#8C5A2B', c: [['#C9772E', 1.8, 6], ['#3B1F2B', .8, 8], ['#7BA05B', .7, 8]], h: '#3E8E3A' },
+    ['8 chicken thighs, bone in, skin on', '150 g pitted prunes', '100 g pitted green olives', '3 tbsp capers, with a splash of their brine', '4 garlic cloves, crushed', '2 tsp dried oregano', '3 bay leaves', '4 tbsp olive oil', '4 tbsp red wine vinegar', '3 tbsp brown sugar', '125 ml white wine', '1 handful parsley, chopped', 'Salt and pepper'],
+    ['Mix the prunes, olives, capers and brine, garlic, oregano, bay leaves, oil, vinegar, salt and pepper in a large bowl. Add the chicken, turn to coat, cover and marinate in the fridge overnight.', 'Heat the oven to 180 °C.', 'Arrange the chicken skin-side up in a roasting tin with all the marinade. Sprinkle the brown sugar over the chicken and pour the wine around it.', 'Roast for 50–60 minutes, basting twice, until the chicken is golden and cooked through.', 'Spoon the prunes, olives and juices over the chicken and scatter with parsley. Serve with rice, couscous or bread.'],
+    'Plan ahead: the chicken marinates overnight.'),
+  R('assassina', 'Spaghetti all’assassina', 'Dinner', 30, '2', { s: 'pan', n: '#C2462B', c: [['#7A2414', .6, 14], ['#E04A2F', .5, 8]], h: '#3E8E3A' },
+    ['200 g spaghetti', '300 ml passata', '600 ml water', '1 tsp salt', '5 tbsp olive oil', '2 garlic cloves, halved', '1–2 dried red chillies, crumbled', '1 tbsp tomato paste'],
+    ['Heat the passata, water and salt in a saucepan to make a hot tomato broth, and keep it at a gentle simmer.', 'In a wide iron or steel frying pan, warm the oil with the garlic and chillies, then stir in the tomato paste for 1 minute.', 'Add the dry, uncooked spaghetti in a single layer and pour over a ladle of broth. Let it bubble away until the pan is almost dry and the spaghetti starts to sizzle and catch.', 'Keep adding broth one ladle at a time, turning the spaghetti only when the underside is crisp and charred in places, for 15–18 minutes until al dente.', 'Remove the garlic and serve straight from the pan, crunchy burnt bits and all.'],
+    'The charred, crispy strands are the point, so don’t use a non-stick pan and don’t stir too often. A speciality from Bari.')
 ];
 
 const $ = s => document.querySelector(s);
@@ -778,7 +1116,107 @@ const PHOTO_CREDITS = {
   "mug-cake": ["Ewelina Podrez-Siama", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Chocolate_Mug_Cake_(KETO,_LCHF,_Low_Carb,_Gluten_free,_FIT).jpg"],
   "fried-rice": ["Peachyeung316", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Fried_rice_in_home.jpg"],
   "baked-cod": ["Daderot", "CC0", "https://commons.wikimedia.org/wiki/File:Cod_fillet_with_hot_sauce_on_a_bed_of_corn,_carrots,_mango,_and_squid_-_Massachusetts.jpg"],
-  "pork-chops": ["Unknown", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Pork_chops_served.jpg"]
+  "pork-chops": ["Unknown", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Pork_chops_served.jpg"],
+  "huevos-rancheros": ["Elchavobeer", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Ela_huevos_rancheros.jpg"],
+  "granola": ["No machine-readable author provided. M…", "CC BY 2.5", "https://commons.wikimedia.org/wiki/File:Granola03242006.JPG"],
+  "dutch-baby": ["Wheeler Cowperthwaite", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:2-22-2025_Dutch_baby_pancake_(1_of_12).jpg"],
+  "avocado-toast": ["Jami430", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Avocado_toast_with_sesame_seeds.jpg"],
+  "bauernfruehstueck": ["Kobako", "CC BY-SA 2.5", "https://commons.wikimedia.org/wiki/File:Bauernfr%C3%BChst%C3%BCck.jpg"],
+  "quarkkeulchen": ["de:User:Schmidti", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Quarkkeulchen.jpg"],
+  "smoothie-bowl": ["Marife.altabano", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Smoothie_bowl.jpg"],
+  "breakfast-hash": ["Ann Larie Valentine", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Shredded_duck,_sweet_potato_hash_%26_red_pepper_jelly_over_a_cornmeal_waffle.jpg"],
+  "waffles": ["Parkerman & Christie from San Diego, USA", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Waffles_with_Strawberries.jpg"],
+  "frittata": ["Albarubescens", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Herb_%27frittata%27_and_boiled_easter_eggs.jpg"],
+  "menemen": ["FakirNL", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Menemen_in_pan.jpg"],
+  "kartoffelpuffer": ["Martin van Baal", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Reibekuchen_mit_Apfelmus.jpg"],
+  "obatzda": ["Rainer Z ...", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Obatzter-1.jpg"],
+  "brezeln": ["Fadkins", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Pretzel_Knot.jpg"],
+  "deviled-eggs": ["Michele Ursino", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Deviled_eggs_closeup.jpg"],
+  "nachos": ["روتانا", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Nachos_with_Melted_Cheese,_Jalapenos,_and_Tasty_Toppings.jpg"],
+  "summer-rolls": ["Unknown", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Summer_roll.jpg"],
+  "baba-ganoush": ["Basel15 at English Wikipedia", "Public domain", "https://commons.wikimedia.org/wiki/File:Baba_Ghanoush.jpg"],
+  "cheese-straws": ["gkrew", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Cheese-straws-01.jpg"],
+  "flapjacks": ["Shisma", "CC0", "https://commons.wikimedia.org/wiki/File:Flapjack.jpeg"],
+  "kartoffelsalat": ["jules", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Potato_salad_3.jpg"],
+  "erbsensuppe": ["Tiia Monto", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Pea_soup_2.jpg"],
+  "linseneintopf": ["Brücke-Osteuropa", "CC0", "https://commons.wikimedia.org/wiki/File:Linseneintopf_mit_Blutwurst_1.JPG"],
+  "flammkuchen": ["Brücke-Osteuropa", "CC0", "https://commons.wikimedia.org/wiki/File:Els%C3%A4sser_Flammkuchen_in_Strasbourg_2.JPG"],
+  "senfeier": ["Raboe001", "CC BY-SA 3.0 de", "https://commons.wikimedia.org/wiki/File:Hannover_2026_-_Caf%C3%A9_Ausblick_-_Senfeier_-_by-RaBoe_006.jpg"],
+  "caprese": ["Rainer Zenz", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Caprese-1.jpg"],
+  "nicoise": ["Daderot", "CC0", "https://commons.wikimedia.org/wiki/File:Salade_ni%C3%A7oise_variant_-_Massachusetts.jpg"],
+  "gazpacho": ["Bocadorada", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Gazpacho_Cazuela_Barro.jpg"],
+  "french-onion-soup": ["jeffreyw", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Mmm...onion_soup_(5344349906).jpg"],
+  "leek-potato-soup": ["jeffreyw", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Mmm..._potato_leek_soup_(5849815506).jpg"],
+  "club-sandwich": ["Peachyeung316", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Club_sandwiches_in_hong_kong.jpg"],
+  "banh-mi": ["Nguyentrongphu", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:B%C3%A1nh_m%C3%AC_%C4%91%E1%BA%ADu_h%C5%A9.jpg"],
+  "tabbouleh": ["cyclonebill", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Flickr_-_cyclonebill_-_Tabbouleh.jpg"],
+  "egg-mayo-sandwich": ["Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Egg_Sandwich_001.jpg"],
+  "quiche-lorraine": ["Claude Humbert", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:54._Quiche_lorraine.jpg"],
+  "spinach-feta-pie": ["Stu Spivack", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Spanokopita_cropped.jpg"],
+  "poke-bowl": ["Andy Li", "CC0", "https://commons.wikimedia.org/wiki/File:Salmon_%26_Tuna_Poke_Bowl_(M)_with_Spicy_Mayo_sauce_-_Kitokito_2025-04-25.jpg"],
+  "cobb-salad": ["Daderot", "CC0", "https://commons.wikimedia.org/wiki/File:Cobb_salad_with_apples,_walnuts,_etc_-_Massachusetts.jpg"],
+  "lentil-salad": ["Karen and Brad Emerson", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Couscous_and_lentil_salad_(3658113458).jpg"],
+  "croque-monsieur": ["毒島みるく", "CC0", "https://commons.wikimedia.org/wiki/File:Croque-monsieur_of_Mister_Donut_in_Japan.jpg"],
+  "pasta-salad": ["Brynn", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Pasta_salad_closeup.JPG"],
+  "miso-soup": ["Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Miso_Soup_001.jpg"],
+  "kaesespaetzle": ["Takeaway", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:2015_0718_K%C3%A4sesp%C3%A4tzle_S%C3%B6lden.jpg"],
+  "rouladen": ["Dr. Bernd Gross", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Th%C3%BCringer_Rinderroulade_mit_Kl%C3%B6%C3%9Fen.JPG"],
+  "gulasch": ["Valeva1010", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Hungarian_Goulash_Recipe.png"],
+  "schnitzel": ["Burkhard Mücke", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:2022-12-29_Wiener_Schnitzel_im_Hotel_Kaiserin_Elisabeth.jpg"],
+  "koenigsberger-klopse": ["Benreis", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:K%C3%B6nigsberger_Klopse_Ketzin_An_der_F%C3%A4hre.jpg"],
+  "frikadellen": ["Jacek Halicki", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:2023_Kotlety_mielone.jpg"],
+  "bratkartoffeln": ["Eckhard Polesny ( ? Metzecki at de.wik…", "Public domain", "https://commons.wikimedia.org/wiki/File:Bratkartoffeln_1024_768.jpg"],
+  "currywurst": ["Superbass", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Curryking-4612.jpg"],
+  "geschnetzeltes": ["Jpatokal", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Z%C3%BCrcher_Geschnetzeltes_at_Zur_rote_Buech.jpg"],
+  "schupfnudeln": ["MarkusHagenlocher", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Schupfnudeln_mit_Sauerkraut.jpg"],
+  "huehnerfrikassee": ["Chicken_fricassee-01.jpg: Like_the_Gra…", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Chicken_fricassee-01-3.jpg"],
+  "lasagne": ["jules / stonesoup", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Lasagne_-_stonesoup.jpg"],
+  "spaghetti-meatballs": ["jeffreyw", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Spaghetti_and_meatballs_1.jpg"],
+  "tikka-masala": ["Michael Hays", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Chicken_tikka_masala.jpg"],
+  "dal": ["AugustineKajur", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Dal_Tadka-Delhi.jpg"],
+  "stroganoff": ["benketaro", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Beef_stroganoff_with_pasta.jpg"],
+  "shepherds-pie": ["Abhinaba Basu from Redmond, United Sta…", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Shepherd%27s_pie_(22470901009).jpg"],
+  "fish-chips": ["Matthias Meckel", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Fish_and_chips_blackpool.jpg"],
+  "paella": ["Jan Harenburg", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:01_Paella_Valenciana_original.jpg"],
+  "jambalaya": ["Arnold Gatilao", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Jambalaya_-_3315899200.jpg"],
+  "moussaka": ["Andy Li", "CC0", "https://commons.wikimedia.org/wiki/File:Meat_Moussaka_-_Kouzina,_Brighton_2023-11-24.jpg"],
+  "katsu-curry": ["Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Katsu-curry_002.jpg"],
+  "kung-pao": ["N509FZ", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Kung_Pao_Chicken_at_Yujiayan_Restaurant_(20230510123120).jpg"],
+  "stuffed-peppers": ["Mark Bonica", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Quinoa_stuffed_peppers.jpg"],
+  "enchiladas": ["Lameirasb", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Festival_de_la_Enchilada_59.jpg"],
+  "burgers": ["Renee Comet (photographer)", "Public domain", "https://commons.wikimedia.org/wiki/File:Cheeseburger.jpg"],
+  "shawarma": ["Tet", "CC0", "https://commons.wikimedia.org/wiki/File:Shawarma_at_Restaurante_S%C3%ADria,_S%C3%A3o_Paulo,_Brazil.jpg"],
+  "pasta-norma": ["Muesse", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Pasta_Norma_Villa_Principe_di_Belmonte_Ispica_2017.jpg"],
+  "arrabbiata": ["Petar Milošević", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Penne_Arrabbiata.jpg"],
+  "prawn-linguine": ["Missvain", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Linguine_and_prawns_-_Swiss_Hotel_-_August_2022_-_Sarah_Stierch.jpg"],
+  "chicken-satay": ["Andy Li", "CC0", "https://commons.wikimedia.org/wiki/File:Chicken_Satay_-_Little_Thai_2024-09-26.jpg"],
+  "mapo-tofu": ["Sichuanfoodlover", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Authentic_Mapo_Tofu.jpg"],
+  "bourguignon": ["Guislin", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:5Pr%C3%A9parationBoeufBourguignon.jpg"],
+  "tortilla-espanola": ["Kent Wang", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Tortilla_de_patata_-_San_Sebasti%C3%A1n.jpg"],
+  "chicken-pot-pie": ["Elsie Hui", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:191-365_Chicken_Pot_Pie.jpg"],
+  "mac-cheese": ["Sumeet Jain from San Francisco, USA", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Macaroni_and_cheese_(2)_(cropped).jpg"],
+  "pad-kra-pao": ["Asturio Cantabrio", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Siam_Garden_Phat_kaphrao_ac.jpg"],
+  "kaesekuchen": ["Ocdp", "CC0", "https://commons.wikimedia.org/wiki/File:Souffl%C3%A9-style_cheesecake_001.jpg"],
+  "apfelstrudel": ["FakirNL", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Apfelstrudel_with_whipped_cream.jpg"],
+  "kaiserschmarrn": ["Takeaway", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:2015_0731_Kaiserschmarrn_Apfelso%C3%9Fe_Edelweissh%C3%BCtte_S%C3%B6lden.jpg"],
+  "rote-gruetze": ["Rote_Grütze_mit_Sahne.jpg: Like_the_Gr…", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Rote_Gr%C3%BCtze_mit_Sahne-3.jpg"],
+  "pavlova": ["brett jordan", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Pavlova_garnished_with_cream_and_strawberries.jpg"],
+  "panna-cotta": ["hiro", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Panna_Cotta_with_cream_and_garnish.jpg"],
+  "sticky-toffee": ["Andy Li", "CC0", "https://commons.wikimedia.org/wiki/File:Sticky_Toffee_Pudding_-_The_Roundhill_Pub_2023-09-24.jpg"],
+  "milchreis": ["E4024", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:S%C3%BCtla%C3%A7_(Turkish_rice_pudding).jpeg"],
+  "carrot-cake": ["Andy Li", "CC0", "https://commons.wikimedia.org/wiki/File:Carrot_Cake_-_The_Den_2025-07-23.jpg"],
+  "crepes": ["David Monniaux", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Crepes_dsc07085.jpg"],
+  "bratapfel": ["Andrey Korzun", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Baked_apple_02.JPG"],
+  "eggs-benedict": ["Mark Miller", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Traditional_Eggs_Benedict.jpg"],
+  "scrambled-eggs": ["Takeaway", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Scrambed_eggs.jpg"],
+  "porridge": ["Shisma", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Oatmeal_porridge_with_fruits.jpg"],
+  "sauerbraten": ["Jameres", "Public domain", "https://commons.wikimedia.org/wiki/File:Sauerbraten_with_potato_dumplings.jpg"],
+  "ratatouille": ["Arnaud 25", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Ratatouille_001.jpg"],
+  "bibimbap": ["abex (a flickr user)", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Korean.food-Bibimbap-02.jpg"],
+  "zwetschgenkuchen": ["Frank Vincentz", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Plum_cake2_ies.jpg"],
+  "tiramisu": ["Sharon Chen from Austin, United States", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Classic_Italian_Tiramisu-3_(29989504485).jpg"],
+  "creme-brulee": ["Janine from Mililani, Hawaii, United S…", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Creme_brulee_(2).jpg"],
+  "glasnudelsalat": ["Takeaway", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Yam_wun_sen.JPG"]
 };
 const stockPhoto = r => r.src === 'classic' && PHOTO_CREDITS[r.id] ? 'photos/' + r.id + '.jpg' : '';
 
@@ -967,17 +1405,30 @@ function scaleLine(line, f) {
   const before = parseNum(m[2] || m[1]), after = before * f;
   let qty = fmtNum(parseNum(m[1]) * f, metric);
   if (m[2]) qty += '–' + fmtNum(after, metric);
-  return { qty, rest: metric ? rest : pluralize(rest, before, parseNum(qty.split('–').pop().replace(' ', '')) || after) };
+  const shown = parseNum(qty.split('–').pop().replace(' ', '')) || after;
+  if (metric) return { qty, rest: rest.replace(/^(\s*)(litre|liter)s?\b/i, (_, sp, w) => sp + w + (shown > 1 ? 's' : '')) };
+  return { qty, rest: pluralize(rest, before, shown) };
 }
-// Fix the first word's plural when a count crosses 1 ("3 eggs" -> "1 egg", "1 onion" -> "2 onions").
-const NO_PLURAL = /^(tsp|tbsp|oz|lb|x|×|pinch|large|small|medium|thick|thin|ripe|very|whole|fresh|dried|frozen|red|green|yellow|white|black|baby|boneless|bone-in|cooked|raw|knob|square|head)$/i;
+// Fix the plural when a count crosses 1 ("3 eggs" -> "1 egg", "1 garlic clove" -> "2 garlic cloves",
+// "1 small bunch mint" -> "2 small bunches mint"): change the measure word if there is one, otherwise the
+// last word of the ingredient's name (the part before any comma or "or"/"and").
+const NO_PLURAL = /^(tsp|tbsp|oz|lb|x|×|pinch)$/i;
+const MEASURE = /^(bunch|bunches|handfuls?|slices?|sprigs?|rashers?|heads?|pieces?|tins?|cans?|jars?|packs?|packets?|sheets?|balls?|cups?|cloves?|sticks?|stalks?|pods?|leaf|leaves|fillets?|wedges?|knobs?|squares?|blocks?|thumbs?|cubes?)$/i;
+const IRREGULAR = { leaf: 'leaves', loaf: 'loaves', half: 'halves', chilli: 'chillies' };
 function pluralize(rest, before, after) {
-  const m = rest.match(/^(\s+)([A-Za-z-]+)/);
-  if (!m || NO_PLURAL.test(m[2])) return rest;
-  let w = m[2];
-  if (before <= 1 && after > 1 && !/s$/i.test(w)) w += /(ch|sh|x)$/i.test(w) ? 'es' : 's';
-  else if (before > 1 && after <= 1 && /[^s]s$/i.test(w)) w = w.replace(/oes$/i, 'o').replace(/([^o])s$/i, '$1').replace(/^(.*o)s$/i, '$1');
-  return m[1] + w + rest.slice(m[0].length);
+  if ((before <= 1) === (after <= 1)) return rest;
+  const words = [...rest.split(/,|\(| or | and | with | for | to | of /)[0].matchAll(/[\p{L}-]+/gu)];
+  if (!words.length || NO_PLURAL.test(words[0][0])) return rest;
+  const m = words.find(x => MEASURE.test(x[0])) || words[words.length - 1];
+  let w = m[0];
+  if (after > 1) {
+    if (/s$/i.test(w)) return rest;
+    w = IRREGULAR[w.toLowerCase()] || w + (/(ch|sh|x)$|^(tomato|potato|mango)$/i.test(w) ? 'es' : 's');
+  } else {
+    w = Object.keys(IRREGULAR).find(k => IRREGULAR[k] === w.toLowerCase())
+      || w.replace(/^(tomato|potato|mango)es$/i, '$1').replace(/(ch|sh|x)es$/i, '$1').replace(/ies$/i, 'y').replace(/([^s])s$/i, '$1');
+  }
+  return rest.slice(0, m.index) + w + rest.slice(m.index + m[0].length);
 }
 const baseServings = r => parseInt((r.serves.match(/\d+/) || [])[0], 10) || 0;
 const servingStep = base => base >= 12 ? Math.max(1, Math.round(base / 4)) : 1;
@@ -1064,6 +1515,7 @@ function showRecipe(r, keepState) {
     el('div', { class: 'hero' }, heroImg, badge, credit),
     el('div', { class: 'card-body' },
       el('div', { class: 'pills' },
+        r.src === 'classic' ? el('span', { class: 'pill', text: 'No. ' + String(classics.indexOf(r) + 1).padStart(3, '0') }) : null,
         el('span', { class: 'pill cat cat-' + r.category, text: r.category }),
         r.minutes ? el('span', { class: 'pill', text: fmtTime(r.minutes) }) : null,
         r.minutes && r.minutes <= 30 ? el('span', { class: 'pill own', text: 'Quick' }) : null),
