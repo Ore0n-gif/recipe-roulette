@@ -129,6 +129,7 @@ button { cursor: pointer; }
 .hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .badge { position: absolute; top: 12px; left: 12px; background: rgb(255 255 255 / .88); color: #16201A; font-size: .76rem; font-weight: 700; padding: 5px 11px; border-radius: 99px; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .badge.idea-badge { background: var(--primary); color: var(--on-primary); }
+.credit { position: absolute; right: 8px; bottom: 8px; max-width: calc(100% - 16px); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; background: rgb(0 0 0 / .45); color: #fff; font-size: .68rem; font-weight: 500; padding: 2px 8px; border-radius: 99px; text-decoration: none; }
 .card-body { padding: 20px 18px 22px; display: flex; flex-direction: column; gap: 20px; }
 .pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .pill { font-size: .78rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; background: var(--surface-2); color: var(--ink); }
@@ -685,6 +686,60 @@ function pool() {
     (filters.source === 'all' || (filters.source === 'mine') === (r.src !== 'classic')));
 }
 
+// ---- Real photos for the built-in recipes (Wikimedia Commons; each card credits its photographer) ----
+const PHOTO_CREDITS = {
+  "shakshuka": ["Junbinhuang", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Shakshuka_Dish.jpg"],
+  "banana-pancakes": ["Brandon Martin-Anderson", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Banana_on_pancake.jpg"],
+  "french-toast": ["W.carter", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:French_toast_with_cinnamon_and_coconut_flakes.jpg"],
+  "breakfast-burritos": ["Cajsa Lilliehook from Portland", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Bacon_Kale_Breakfast_Burrito_(8429773809).jpg"],
+  "blueberry-muffins": ["SKopp", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Blueberry_muffins,_whole_and_partial.jpg"],
+  "greek-salad": ["Khaled", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:DSC04477trfguyh.jpg"],
+  "tomato-soup": ["Andy / Andrew Fogg from near Cambridge…", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Roast_red_pepper_and_tomato_soup_(9329225756).jpg"],
+  "tuna-melt": ["kweez mcG from London, UK", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Tuna_melt_sandwich_with_fries.jpg"],
+  "minestrone": ["Katrin Morenz from Aachen, Deutschland", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Minestrone_soup.jpg"],
+  "bean-quesadillas": ["Cayobo", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Carnitas_and_Black_Bean_Quesadilla,_Key_West_Florida_2022.jpg"],
+  "chicken-caesar": ["pattyonflickr", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Chicken_Caesar_Salad_at_French_Market_Restaurant.jpg"],
+  "chicken-noodle-soup": ["Nichijyou123", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Chicken_Noodle_Soup_US.jpg"],
+  "squash-soup": ["Karen and Brad Emerson", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Butternut_squash_soup_(5171665819).jpg"],
+  "aglio-olio": ["Bairuilong", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Spaghetti_aglio_e_olio_KB.jpg"],
+  "carbonara": ["Javier Somoza", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Espaguetis_carbonara.jpg"],
+  "chickpea-curry": ["Kari Sullivan from Austin, TX", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Spinach-Chickpea_Curry_(3117324894).jpg"],
+  "beef-tacos": ["Larry Miller", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:001_Tacos_de_carnitas,_carne_asada_y_al_pastor.jpg"],
+  "mushroom-risotto": ["spurekar", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Mushroom_and_Leek_Risotto_(49535206656).jpg"],
+  "green-curry": ["Kenamparo", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Thai_Green_Curry_with_Rice.jpg"],
+  "chilli": ["Carstor", "CC BY-SA 2.5", "https://commons.wikimedia.org/wiki/File:Bowl_of_chili.jpg"],
+  "beef-broccoli": ["Joy", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Beef_and_broccoli_stir_fry.jpg"],
+  "fajitas": ["Missvain", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Chicken_fajitas_-_La_Hacienda_-_Sarah_Stierch.jpg"],
+  "pad-thai": ["Oleg Yunakov", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Pad_Thai_noodles_topped_with_whole_head-on_prawns.jpg"],
+  "choc-chip-cookies": ["Mshuang2", "CC0", "https://commons.wikimedia.org/wiki/File:Chocolate_chip_cookies_on_cutting_board.jpg"],
+  "apple-crumble": ["Jonathan Harker", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:British_apple_crumble_04.jpg"],
+  "brownies": ["Missvain", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Dolly_Pardon%27s_Fabulously_Fudgy_Brownies_-_October_2023_-_Sarah_Stierch.jpg"],
+  "chocolate-mousse": ["Lu from Seattle, USA", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Chocolate_coffee_mousse.jpg"],
+  "guacamole": ["Nikodem Nijaki", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Guacamole_IMGP1271.jpg"],
+  "hummus": ["Paul Goyette", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Hummus_from_The_Nile.jpg"],
+  "tzatziki": ["Nikodem Nijaki", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Tzatziki_meze_or_appetizer,_also_used_as_a_sauce.jpg"],
+  "omelette": ["David Pursehouse from Kawasaki, Japan", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Spinach_omelette_(3278835124).jpg"],
+  "falafel-wraps": ["Andy Li", "CC0", "https://commons.wikimedia.org/wiki/File:Falafel_%26_Hummus_Wrap_-_Lavash_2024-08-19.jpg"],
+  "halloumi-couscous": ["Karen and Brad Emerson", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Couscous_and_lentil_salad_(3658113458).jpg"],
+  "lemon-chicken": ["Willis Lam", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Tenglong_Chinese_Restaurant_Lemon_Chicken_(37577556406).jpg"],
+  "glazed-salmon": ["HarshLight", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Sesame_Soy_Glazed_Skuna_Bay_Salmon_-_2.jpg"],
+  "lentil-bolognese": ["Superbass", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Spaghetti_Bolognese_Lokal_K.jpg"],
+  "teriyaki": ["Flickr.com user \"Blue Lotus\"", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Chicken_teriyaki.jpg"],
+  "fish-tacos": ["Douglas Muth", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Fish_tacos_in_Pittsburg.jpg"],
+  "pesto-gnocchi": ["Fuerteadventours", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Gnocchi_al_pesto_-_homemade.jpg"],
+  "banana-bread": ["Whitney", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Banana_bread_loaf,_October_2008.jpg"],
+  "lemon-posset": ["jules", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Lemon_posset-3.jpg"],
+  "roasted-chickpeas": ["Physicistjedi", "Public domain", "https://commons.wikimedia.org/wiki/File:Leblebi.jpg"],
+  "margherita": ["mroach from Malmö, Sweden", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Margherita_pizza_(5209912131).jpg"],
+  "bruschetta": ["Abi Porter", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Tomato_and_basil_bruschetta_(4925749658).jpg"],
+  "sausage-bean": ["BrokenSphere", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Bowl_of_cassoulet.JPG"],
+  "mug-cake": ["Ewelina Podrez-Siama", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Chocolate_Mug_Cake_(KETO,_LCHF,_Low_Carb,_Gluten_free,_FIT).jpg"],
+  "fried-rice": ["Peachyeung316", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Fried_rice_in_home.jpg"],
+  "baked-cod": ["Daderot", "CC0", "https://commons.wikimedia.org/wiki/File:Cod_fillet_with_hot_sauce_on_a_bed_of_corn,_carrots,_mango,_and_squid_-_Massachusetts.jpg"],
+  "pork-chops": ["Unknown", "CC BY-SA 2.0", "https://commons.wikimedia.org/wiki/File:Pork_chops_served.jpg"]
+};
+const stockPhoto = r => r.src === 'classic' && PHOTO_CREDITS[r.id] ? 'photos/' + r.id + '.jpg' : '';
+
 // ---- Dish illustrations (drawn on canvas, cached as images) ----
 const TABLE = { Breakfast: ['#FDF4D6', '#F6E2A4'], Lunch: ['#E4F5EA', '#C4E9D2'], Dinner: ['#FDEAE3', '#F7CFC1'], Dessert: ['#F0EBFD', '#DCD1FA'], Snack: ['#E3F1FC', '#C5E0F7'] };
 const DEFAULT_ART = {
@@ -827,7 +882,9 @@ function artURL(r, w, h) {
   return url;
 }
 function picture(r, w, h, cls, alt) {
-  const img = el('img', { class: cls, alt: alt || '', src: artURL(r, w, h), decoding: 'async' });
+  const stock = !r.photo && stockPhoto(r);
+  const img = el('img', { class: cls, alt: alt || '', src: stock || artURL(r, w, h), decoding: 'async' });
+  if (stock) img.addEventListener('error', () => { img.src = artURL(r, w, h); img.dispatchEvent(new Event('fallback')); }, { once: true });
   if (r.photo) photoURL(r.photo).then(u => { if (u) img.src = u; });
   return img;
 }
@@ -955,8 +1012,14 @@ function showRecipe(r, keepState) {
   if ('wakeLock' in navigator) foot.push(el('button', { class: 'btn small', id: 'awake-btn', 'aria-pressed': String(wantAwake), onclick: () => setAwake(!wantAwake) }, wantAwake ? 'Screen stays on' : 'Keep screen on'));
   if (r.src === 'mine') foot.push(el('button', { class: 'btn small', onclick: () => startEdit(r) }, 'Edit'));
 
+  const stock = !r.photo && stockPhoto(r);
+  const heroImg = picture(r, 800, 500, '', (r.photo || stock ? 'Photo of ' : 'Illustration of ') + r.title);
+  const cr = stock && PHOTO_CREDITS[r.id];
+  const credit = cr ? el('a', { class: 'credit', href: cr[2], target: '_blank', rel: 'noopener', text: 'Photo: ' + (cr[0] === 'Unknown' ? 'Wikimedia Commons' : cr[0]) + ' · ' + cr[1] }) : null;
+  if (credit) heroImg.addEventListener('fallback', () => { credit.remove(); heroImg.alt = 'Illustration of ' + r.title; });
+
   slot.replaceChildren(el('article', { class: 'card' },
-    el('div', { class: 'hero' }, picture(r, 800, 500, '', r.photo ? 'Photo of ' + r.title : 'Illustration of ' + r.title), badge),
+    el('div', { class: 'hero' }, heroImg, badge, credit),
     el('div', { class: 'card-body' },
       el('div', { class: 'pills' },
         el('span', { class: 'pill cat cat-' + r.category, text: r.category }),

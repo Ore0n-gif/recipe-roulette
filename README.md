@@ -4,15 +4,18 @@ A small recipe shuffler that gives you a random cooking recipe each shuffle. You
 
 It's a personal recipe app for iPhone that runs as a home-screen web app. Recipes and photos are stored on your phone, everything except **New idea** works offline, and New idea uses your own Claude API key (Claude Haiku 5.5).
 
-## Files
+Live at https://ore0n-gif.github.io/recipe-roulette/
 
-Upload all six files together:
+## Files
 
 - `index.html`: the app
 - `sw.js`: keeps the app working offline
 - `manifest.webmanifest`, `icon-180.png`, `icon-192.png`, `icon-512.png`: the home-screen name and icon
+- `photos/`: photos of the built-in recipes
 
-`README.md` is this guide and doesn't need uploading.
+## Photo credits
+
+The photos of the built-in recipes come from [Wikimedia Commons](https://commons.wikimedia.org) under free licenses (Creative Commons and public domain). They were cropped to fit the app. Each recipe card names the photographer and license, and tapping that credit opens the original. Recipes without a photo show a drawn illustration.
 
 ## 1. Put it online with GitHub Pages (free, about 5 minutes)
 
@@ -47,4 +50,4 @@ Your recipes exist only on your phone. Every so often, go to **Settings → Save
 
 ## Updating the app
 
-Upload the changed file to the same GitHub repository (it replaces the old one). Then open the app, close it, and open it again: the first launch downloads the update in the background, and the second launch shows it. Your recipes aren't affected.
+Push or upload the changed files to this repository. Then open the app, close it, and open it again: the first launch downloads the update in the background, and the second launch shows it. Your recipes aren't affected.
