@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recipe Roulette</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Recipes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F6F7F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1311" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: one clean column of picture cards; a thumb-height Shuffle + New idea dock fixed to the bottom. */
+:root {
+  --bg: #F6F7F5;
+  --surface: #FFFFFF;
+  --surface-2: #EEF1ED;
+  --ink: #16201A;
+  --muted: #5E6A63;
+  --line: #E2E7E1;
+  --primary: #14804A;
+  --on-primary: #FFFFFF;
+  --primary-soft: #E2F3E8;
+  --accent: #F0544F;
+  --danger: #C62828;
+  --shadow: rgb(22 32 26 / .06);
+  --shadow-strong: rgb(22 32 26 / .14);
+  --glow: rgb(20 128 74 / .28);
+  --c-breakfast: #F9E3A1; --d-breakfast: #E5B12A;
+  --c-lunch: #C8EBD5;     --d-lunch: #36B06A;
+  --c-dinner: #FAD3C6;    --d-dinner: #EC7550;
+  --c-dessert: #E2D8FB;   --d-dessert: #9677E8;
+  --c-snack: #CCE4F8;     --d-snack: #4498DC;
+  --on-pastel: #16201A;
+  --font: "Plus Jakarta Sans", -apple-system, "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1311; --surface: #181D1A; --surface-2: #232A26; --ink: #EDF2EE; --muted: #A2ADA6;
+    --line: #2B332E; --primary: #3DD68C; --on-primary: #08160F; --primary-soft: #173A29; --accent: #FF7A72;
+    --danger: #FF8A80; --shadow: rgb(0 0 0 / .3); --shadow-strong: rgb(0 0 0 / .5); --glow: rgb(0 0 0 / .5); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1311; --surface: #181D1A; --surface-2: #232A26; --ink: #EDF2EE; --muted: #A2ADA6;
+  --line: #2B332E; --primary: #3DD68C; --on-primary: #08160F; --primary-soft: #173A29; --accent: #FF7A72;
+  --danger: #FF8A80; --shadow: rgb(0 0 0 / .3); --shadow-strong: rgb(0 0 0 / .5); --glow: rgb(0 0 0 / .5); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+html { color-scheme: light; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16.5px/1.55 var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: env(safe-area-inset-top, 0px) 150px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+.app, .view { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Header */
+.top { padding-block: 16px 4px; display: flex; flex-direction: column; gap: 18px; }
+.headrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.brandrow { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.logo { flex: none; width: 36px; height: 36px; border-radius: 11px; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; }
+.logo svg { width: 21px; height: 21px; }
+.brand { font-weight: 800; font-size: 1.08rem; line-height: 1; letter-spacing: -0.02em; margin: 0; }
+.greet { display: flex; flex-direction: column; gap: 4px; }
+.hello { margin: 0; font-weight: 800; font-size: clamp(1.55rem, 6.6vw, 1.95rem); line-height: 1.15; letter-spacing: -0.035em; text-wrap: balance; }
+.tally { margin: 0; font-size: .92rem; color: var(--muted); }
+.gear { flex: none; width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: grid; place-items: center; }
+.gear svg { width: 20px; height: 20px; }
+.gear[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 8px 24px var(--shadow); display: flex; flex-direction: column; gap: 14px; }
+.panel h3 { margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; }
+.panel p { margin: 0; }
+.keyrow { display: flex; gap: 8px; }
+.keyrow input { flex: 1; min-width: 0; font-family: ui-monospace, Menlo, monospace; font-size: 15px; }
+.ok { color: var(--primary); font-weight: 700; }
+.panel a { color: var(--primary); font-weight: 700; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 14px; }
+.tab { border: 0; background: transparent; padding: 9px 6px; border-radius: 11px; font-weight: 700; font-size: .92rem; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px var(--shadow-strong); }
+.count { font-size: .72rem; font-weight: 700; background: var(--primary-soft); color: var(--primary); border-radius: 99px; padding: 1px 7px; font-variant-numeric: tabular-nums; }
+
+/* Filters */
+.filters { display: flex; flex-direction: column; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); padding: 7px 14px; border-radius: 99px; font-size: .88rem; font-weight: 600; color: var(--ink); display: inline-flex; align-items: center; gap: 7px; }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--dot); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.cat-Breakfast { --pastel: var(--c-breakfast); --dot: var(--d-breakfast); }
+.cat-Lunch { --pastel: var(--c-lunch); --dot: var(--d-lunch); }
+.cat-Dinner { --pastel: var(--c-dinner); --dot: var(--d-dinner); }
+.cat-Dessert { --pastel: var(--c-dessert); --dot: var(--d-dessert); }
+.cat-Snack { --pastel: var(--c-snack); --dot: var(--d-snack); }
+
+/* Idea panel */
+.idea { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 8px 24px var(--shadow); }
+.idea label { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.015em; }
+.idea .note { margin: 0; }
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.thinking { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.spinner { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--primary-soft); border-top-color: var(--primary); animation: spin .8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Recipe card */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; box-shadow: 0 1px 2px var(--shadow), 0 12px 32px var(--shadow); animation: deal .3s ease-out; }
+@keyframes deal { from { transform: translateY(10px); opacity: .6; } to { transform: none; opacity: 1; } }
+.hero { position: relative; aspect-ratio: 16 / 10; max-width: 100%; background: var(--surface-2); }
+.hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.badge { position: absolute; top: 12px; left: 12px; background: rgb(255 255 255 / .88); color: #16201A; font-size: .76rem; font-weight: 700; padding: 5px 11px; border-radius: 99px; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.badge.idea-badge { background: var(--primary); color: var(--on-primary); }
+.card-body { padding: 20px 18px 22px; display: flex; flex-direction: column; gap: 20px; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-size: .78rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; background: var(--surface-2); color: var(--ink); }
+.pill.cat { background: var(--pastel); color: var(--on-pastel); }
+.pill.own { background: var(--primary-soft); color: var(--primary); }
+.title { font-weight: 800; font-size: clamp(1.6rem, 7vw, 2.1rem); line-height: 1.1; letter-spacing: -0.035em; margin: -8px 0 0; text-wrap: balance; overflow-wrap: anywhere; }
+.save-idea { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--primary-soft); border-radius: 16px; padding: 12px 14px; }
+.save-idea p { margin: 0; flex: 1 1 200px; font-weight: 600; font-size: .92rem; }
+.servings { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: var(--surface-2); border-radius: 16px; padding: 6px 6px 6px 14px; }
+.servings .lbl { font-weight: 700; font-size: .92rem; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper button { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-size: 1.35rem; font-weight: 600; line-height: 1; color: var(--ink); }
+.stepper button:disabled { opacity: .4; cursor: default; }
+.stepper output { min-width: 6em; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sec { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.sec h3 { margin: 0; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.015em; }
+.scale-note { margin: 0; font-size: .86rem; color: var(--muted); }
+.ings { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ings label { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; cursor: pointer; }
+.ings li:last-child label { border-bottom: 0; }
+.ings input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--primary); flex: none; }
+.ings input:checked + span { text-decoration: line-through; color: var(--muted); }
+.ings .qty { font-weight: 700; }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 14px; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 30px 1fr; gap: 12px; overflow-wrap: anywhere; }
+.steps li::before { content: counter(step); font-weight: 700; font-size: .85rem; color: var(--primary); background: var(--primary-soft); border-radius: 50%; width: 28px; height: 28px; display: grid; place-items: center; }
+.notes { margin: 0; background: var(--surface-2); border-radius: 14px; padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.card-foot { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Buttons */
+.btn { border: 1px solid transparent; background: var(--surface-2); color: var(--ink); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: .92rem; display: inline-flex; align-items: center; gap: 6px; }
+.btn.primary { background: var(--primary); color: var(--on-primary); }
+.btn[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); }
+.btn.small { padding: 7px 12px; font-size: .85rem; border-radius: 10px; }
+.btn.danger { color: var(--danger); }
+.btn:disabled { opacity: .55; cursor: default; }
+
+/* Empty states */
+.empty { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 28px 22px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; box-shadow: 0 8px 24px var(--shadow); }
+.empty h2 { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+.empty p { margin: 0; color: var(--muted); }
+
+/* My recipes */
+.sectionhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sectionhead h2 { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -0.035em; }
+.list { list-style: none; margin: 0; padding: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 8px 24px var(--shadow); }
+.list:empty { display: none; }
+.row { display: flex; gap: 12px; align-items: center; padding: 8px; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row-main { flex: 1; min-width: 0; border: 0; background: none; text-align: left; padding: 0; display: flex; align-items: center; gap: 12px; }
+.thumb { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; flex: none; background: var(--surface-2); }
+.row-text { display: flex; flex-direction: column; min-width: 0; }
+.row-title { font-weight: 700; overflow-wrap: anywhere; }
+.row-meta { font-size: .82rem; color: var(--muted); }
+.row-actions { display: flex; gap: 6px; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+.note { font-size: .9rem; color: var(--muted); margin: 0; }
+
+/* Form */
+form { display: flex; flex-direction: column; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 8px 24px var(--shadow); }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > label, .flabel { font-weight: 700; font-size: .93rem; }
+.field small { color: var(--muted); font-size: .84rem; font-weight: 500; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+input[type="text"], input[type="number"], input[type="password"], select, textarea {
+  width: 100%; font-size: 16px; padding: 11px 13px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg);
+}
+input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft);
+}
+textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
+.photo-pick { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.photo-pick img { width: 96px; height: 72px; object-fit: cover; border-radius: 12px; }
+.error { color: var(--danger); font-weight: 700; margin: 0; }
+
+/* Dock + toast */
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  padding-top: 28px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: linear-gradient(to bottom, transparent, var(--bg) 42%);
+  pointer-events: none;
+}
+.dock-inner { max-width: 560px; margin: 0 auto; display: flex; gap: 10px; pointer-events: auto; }
+.shuffle {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;
+  border: 0; border-radius: 18px; background: var(--primary); color: var(--on-primary);
+  padding: 16px; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.01em;
+  box-shadow: 0 8px 22px var(--glow);
+}
+.idea-btn {
+  flex: none; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--ink);
+  padding: 14px 18px; font-weight: 700; box-shadow: 0 8px 22px var(--shadow-strong);
+}
+.shuffle svg, .idea-btn svg { width: 21px; height: 21px; flex: none; }
+.idea-btn svg { color: var(--accent); }
+.shuffle:active, .idea-btn:active { transform: scale(.97); }
+.toast {
+  position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 12px; font-weight: 600; font-size: .92rem; z-index: 6;
+  max-width: calc(100% - 32px); text-align: center;
+}
+@media (prefers-reduced-motion: reduce) { .card { animation: none; } .spinner { animation-duration: 3s; } .shuffle:active, .idea-btn:active { transform: none; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="headrow">
+      <div class="brandrow">
+        <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18a9 8 0 0 1-18 0z"/><path d="M8 8.5c0-1.5 1.2-1.5 1.2-3.5M12.4 8.5c0-1.5 1.2-1.5 1.2-3.5"/></svg></span>
+        <h1 class="brand">Recipe Roulette</h1>
+      </div>
+      <button class="gear" id="gear-btn" aria-label="Settings and backup" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+    <div class="greet">
+      <p class="hello" id="hello">Hello there.</p>
+      <p class="tally" id="tally"></p>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" id="tab-shuffle" role="tab" data-view="shuffle" aria-selected="true">Shuffle</button>
+      <button class="tab" id="tab-mine" role="tab" data-view="mine" aria-selected="false">Mine <span class="count" id="mine-count">0</span></button>
+      <button class="tab" id="tab-add" role="tab" data-view="add" aria-selected="false">+ Add</button>
+    </nav>
+  </header>
+
+  <section id="view-shuffle" class="view">
+    <div class="filters">
+      <div class="chips" id="cat-chips" aria-label="Meal"></div>
+      <div class="chips" id="more-chips" aria-label="More filters"></div>
+    </div>
+    <div class="idea" id="idea-panel" hidden>
+      <label for="idea-input">Get a brand-new recipe idea</label>
+      <div class="sec" id="idea-nokey" hidden>
+        <p class="note">New ideas use your own Claude API key. Add it once in Settings and it stays on this phone.</p>
+        <div class="row-btns"><button class="btn primary" id="idea-settings">Open settings</button></div>
+      </div>
+      <input type="text" id="idea-input" autocomplete="off" maxlength="200" placeholder="Anything in mind? Vegetarian, uses up spinach, Mexican…">
+      <p class="note" id="idea-filters"></p>
+      <div class="thinking" id="idea-thinking" hidden><span class="spinner" aria-hidden="true"></span><span>Thinking up a recipe. This can take up to a minute.</span></div>
+      <p class="error" id="idea-error" role="alert" hidden></p>
+      <div class="row-btns" id="idea-actions">
+        <button class="btn primary" id="idea-go">Create recipe</button>
+        <button class="btn" id="idea-close">Close</button>
+      </div>
+    </div>
+    <div id="card-slot"></div>
+  </section>
+
+  <section id="view-mine" class="view" hidden>
+    <div class="sectionhead">
+      <h2>My recipes</h2>
+      <button class="btn primary small" id="mine-add">+ Add recipe</button>
+    </div>
+    <p class="note" id="store-note">Saved on this phone. Make a backup now and then from Settings.</p>
+    <ul class="list" id="list"></ul>
+    <div class="empty" id="mine-empty" hidden>
+      <h2>No recipes of your own yet</h2>
+      <p>Add the dishes you cook at home, or save a new idea you like, and they'll join the shuffle.</p>
+      <button class="btn primary" id="mine-empty-add">Add your first recipe</button>
+    </div>
+  </section>
+
+  <section id="view-settings" class="view" hidden>
+    <div class="sectionhead"><h2>Settings</h2></div>
+    <div class="panel">
+      <h3>Claude API key</h3>
+      <p class="note">Powers the New idea button. The key stays on this phone and is sent only to Anthropic. Create one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>, and set a monthly spending limit there.</p>
+      <div class="keyrow">
+        <input type="password" id="f-key" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" aria-label="Claude API key">
+        <button type="button" class="btn small" id="key-show">Show</button>
+      </div>
+      <div class="row-btns">
+        <button class="btn primary" id="key-save">Save key</button>
+        <button class="btn" id="key-test">Check key</button>
+        <button class="btn" id="key-remove">Remove</button>
+      </div>
+      <p class="note" id="key-status" role="status"></p>
+      <p class="note" id="spend-note"></p>
+    </div>
+    <div class="panel">
+      <h3>Backup</h3>
+      <p class="note">Your recipes and photos live only on this phone. Save a backup to Files or iCloud Drive now and then, and restore it if you switch phones.</p>
+      <div class="row-btns">
+        <button class="btn primary" id="export-btn">Save backup</button>
+        <label class="btn" for="import-file">Restore backup</label>
+        <input type="file" id="import-file" accept="application/json,.json" class="visually-hidden">
+      </div>
+      <p class="note" id="backup-status" role="status"></p>
+    </div>
+  </section>
+
+  <section id="view-add" class="view" hidden>
+    <div class="sectionhead"><h2 id="form-heading">New recipe</h2></div>
+    <form id="form" novalidate>
+      <div class="field">
+        <label for="f-title">Name</label>
+        <input type="text" id="f-title" autocomplete="off" placeholder="Grandma's lasagne">
+      </div>
+      <div class="field" id="photo-field">
+        <span class="flabel">Photo <small>(optional)</small></span>
+        <div class="photo-pick">
+          <img id="photo-preview" alt="Recipe photo preview" hidden>
+          <label class="btn" for="f-photo" id="photo-label">Add a photo</label>
+          <input type="file" id="f-photo" accept="image/*" class="visually-hidden">
+          <button type="button" class="btn" id="photo-remove" hidden>Remove photo</button>
+        </div>
+        <small>Without a photo, the recipe gets an illustration.</small>
+      </div>
+      <div class="grid3">
+        <div class="field">
+          <label for="f-category">Meal</label>
+          <select id="f-category"></select>
+        </div>
+        <div class="field">
+          <label for="f-minutes">Total time (min)</label>
+          <input type="number" id="f-minutes" inputmode="numeric" min="0" step="5" placeholder="45">
+        </div>
+        <div class="field">
+          <label for="f-serves">Serves</label>
+          <input type="text" id="f-serves" autocomplete="off" inputmode="numeric" placeholder="4">
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-ingredients">Ingredients</label>
+        <small>One per line. Start with the amount ("200 g rice") so servings can scale it.</small>
+        <textarea id="f-ingredients" placeholder="500 g minced beef&#10;1 onion, chopped&#10;1 × 400 g tin chopped tomatoes"></textarea>
+      </div>
+      <div class="field">
+        <label for="f-steps">Method</label>
+        <small>One step per line. Numbers are added for you.</small>
+        <textarea id="f-steps" placeholder="Brown the beef and onion.&#10;Add the tomatoes and simmer 20 minutes."></textarea>
+      </div>
+      <div class="field">
+        <label for="f-notes">Notes <small>(optional)</small></label>
+        <textarea id="f-notes" style="min-height:80px" placeholder="Freezes well. Double the garlic."></textarea>
+      </div>
+      <p class="error" id="form-error" role="alert" hidden></p>
+      <div class="row-btns">
+        <button class="btn primary" type="submit" id="save-btn">Save recipe</button>
+        <button class="btn" type="button" id="cancel-btn">Cancel</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<div class="dock" id="dock">
+  <div class="dock-inner">
+    <button class="shuffle" id="shuffle-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg>
+      Shuffle
+    </button>
+    <button class="idea-btn" id="idea-btn">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/><path d="M19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z"/></svg>
+      New idea
+    </button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+const CATS = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack'];
+const SHAPES = ['plate', 'bowl', 'pan', 'tray', 'board', 'pizza', 'jar', 'mug'];
+const R = (id, title, category, minutes, serves, art, ingredients, steps, notes) => ({ id, title, category, minutes, serves, art, ingredients, steps, notes: notes || '' });
+
+const CLASSICS = [
+  // Breakfast
+  R('shakshuka', 'Shakshuka', 'Breakfast', 30, '2', { s: 'pan', b: '#D2432B', c: ['#E8743B', '#B8321F'], e: 4, h: '#3F9B4A' },
+    ['2 tbsp olive oil', '1 onion, sliced', '1 red pepper, sliced', '2 garlic cloves, chopped', '1 tsp ground cumin', '1 tsp smoked paprika', '1 × 400 g tin chopped tomatoes', '4 eggs', '1 handful parsley or coriander', 'Salt and pepper'],
+    ['Soften the onion and pepper in the oil over medium heat, about 8 minutes.', 'Add the garlic, cumin and paprika and cook for 1 minute.', 'Pour in the tomatoes, season, and simmer until thick, 8–10 minutes.', 'Make hollows, crack in the eggs, cover and cook until the whites set, 5–7 minutes.', 'Scatter with herbs and serve with bread.']),
+  R('overnight-oats', 'Overnight oats', 'Breakfast', 5, '1', { s: 'jar', b: '#EFE3CC', c: ['#F7F1E3', '#5B4BB7', '#D9314A'] },
+    ['50 g rolled oats', '120 ml milk', '2 tbsp plain yogurt', '1 tsp chia seeds (optional)', '1 tsp honey or maple syrup', 'Berries or sliced banana to top'],
+    ['Stir the oats, milk, yogurt, chia and honey together in a jar.', 'Cover and refrigerate overnight.', 'Loosen with a splash of milk in the morning and top with fruit.'],
+    'Needs at least 6 hours in the fridge.'),
+  R('banana-pancakes', 'Banana pancakes', 'Breakfast', 20, '2', { s: 'plate', b: '#E7A94B', c: ['#F6E7A8', '#F6E7A8', ['#7A3E1B', .6, 6]] },
+    ['1 ripe banana', '1 egg', '150 ml milk', '120 g plain flour', '1 tsp baking powder', 'Pinch of salt', 'Butter for the pan'],
+    ['Mash the banana, then whisk in the egg and milk.', 'Stir in the flour, baking powder and salt until just combined.', 'Heat a little butter in a pan over medium heat.', 'Cook 3 tbsp of batter per pancake until bubbles form, flip, and cook 1 more minute.', 'Serve with maple syrup or yogurt.']),
+  R('french-toast', 'Cinnamon French toast', 'Breakfast', 15, '2', { s: 'plate', c: [['#D99A4E', 2.4, 3], '#C0392B', '#3D5A98'] },
+    ['2 eggs', '100 ml milk', '½ tsp ground cinnamon', '1 tsp sugar', '4 thick slices bread (brioche is great)', '1 tbsp butter', 'Berries and maple syrup to serve'],
+    ['Whisk the eggs, milk, cinnamon and sugar in a shallow dish.', 'Soak each slice of bread for about 10 seconds per side.', 'Melt the butter in a frying pan over medium heat.', 'Fry the slices 2–3 minutes per side until golden.', 'Serve with berries and maple syrup.']),
+  R('omelette', 'Spinach & feta omelette', 'Breakfast', 10, '1', { s: 'pan', b: '#F6D365', c: ['#2E7D32', '#FFFFFF'], z: .7 },
+    ['3 eggs', '1 knob butter', '1 handful baby spinach', '30 g feta, crumbled', 'Salt and pepper'],
+    ['Beat the eggs with salt and pepper.', 'Melt the butter in a small non-stick pan over medium heat and wilt the spinach.', 'Pour in the eggs and stir gently until almost set but still a little runny on top.', 'Scatter over the feta, fold in half and slide onto a plate.']),
+  R('breakfast-burritos', 'Breakfast burritos', 'Breakfast', 20, '2', { s: 'board', c: [['#F3D9A4', 2.6, 2], '#E63946', '#2B2B2B', '#FFD166'] },
+    ['4 eggs', '1 × 400 g tin black beans, drained', '1 tsp ground cumin', '2 large tortillas', '60 g Cheddar, grated', '1 avocado, sliced', '2 tbsp salsa'],
+    ['Warm the beans with the cumin and a splash of water, mashing a few.', 'Scramble the eggs gently in a buttered pan.', 'Warm the tortillas, then fill with beans, eggs, cheese, avocado and salsa.', 'Fold in the sides, roll up tightly and cut in half.']),
+  R('blueberry-muffins', 'Blueberry muffins', 'Breakfast', 35, 'Makes 12', { s: 'tray', b: '#F3E3C3', c: [['#D9A05B', 1.9, 6], '#3D3B8E'] },
+    ['250 g plain flour', '2 tsp baking powder', '½ tsp salt', '150 g sugar', '2 eggs', '120 ml milk', '100 ml vegetable oil', '1 tsp vanilla extract', '150 g blueberries'],
+    ['Heat the oven to 200 °C (180 °C fan) and line a muffin tin.', 'Mix the flour, baking powder, salt and sugar in a bowl.', 'Whisk the eggs, milk, oil and vanilla, then stir into the dry ingredients until just combined.', 'Fold in the blueberries and divide between the cases.', 'Bake 20–22 minutes until risen and golden.']),
+  // Lunch
+  R('greek-salad', 'Greek salad', 'Lunch', 10, '2', { s: 'bowl', m: '#1F5FA8', b: '#F4EFE6', c: ['#E63946', '#7CB342', '#FFFFFF', '#2B2B2B', '#C77DBA'], h: '#6A994E' },
+    ['3 tomatoes, cut into wedges', '½ cucumber, chunked', '½ red onion, thinly sliced', '1 green pepper, sliced', '1 handful Kalamata olives', '200 g feta', '3 tbsp olive oil', '1 tsp dried oregano'],
+    ['Combine the tomatoes, cucumber, onion, pepper and olives in a bowl.', 'Lay the feta on top in one slab.', 'Drizzle with oil and sprinkle with oregano and a pinch of salt.']),
+  R('tomato-soup', 'Roast tomato soup', 'Lunch', 45, '4', { s: 'bowl', m: '#F4EFE6', b: '#D9402B', c: ['#F5E6D3'], z: .6, h: '#3E8E3A' },
+    ['1 kg tomatoes, halved', '1 red onion, quartered', '4 garlic cloves, unpeeled', '2 tbsp olive oil', '500 ml vegetable stock', '1 handful basil', 'Salt and pepper'],
+    ['Heat the oven to 200 °C. Roast the tomatoes, onion and garlic with the oil and seasoning for 30 minutes.', 'Squeeze the garlic from its skins into a pan and add everything else from the tray.', 'Add the stock and basil and bring to a simmer.', 'Blend until smooth and season to taste.']),
+  R('tuna-melt', 'Tuna melt', 'Lunch', 15, '2', { s: 'board', c: [['#E9B44C', 2.6, 2], ['#D9902F', 1, 5]] },
+    ['1 × 145 g tin tuna, drained', '2 tbsp mayonnaise', '1 spring onion, chopped', '1 tsp lemon juice', '4 slices bread', '80 g Cheddar, grated', 'Butter'],
+    ['Mix the tuna, mayonnaise, spring onion and lemon juice.', 'Spread onto 2 slices of bread, top with cheese and the other slices.', 'Butter the outsides.', 'Fry over medium heat for 3 minutes per side until golden and melted.']),
+  R('minestrone', 'Minestrone', 'Lunch', 45, '6', { s: 'bowl', m: '#2A9D8F', b: '#C8553D', c: ['#F4A259', '#7BA05B', '#F6EBD9', '#E9C46A'], z: .7 },
+    ['2 tbsp olive oil', '1 onion, diced', '1 carrot, diced', '1 celery stick, diced', '2 garlic cloves, chopped', '1 × 400 g tin chopped tomatoes', '1.2 litres vegetable stock', '1 × 400 g tin cannellini beans, drained', '80 g small pasta', '2 handfuls chopped kale or cabbage'],
+    ['Soften the onion, carrot and celery in the oil, about 10 minutes.', 'Add the garlic, tomatoes and stock; simmer 15 minutes.', 'Add the beans, pasta and greens; cook until the pasta is tender, about 10 minutes.', 'Season and serve with Parmesan and bread.']),
+  R('bean-quesadillas', 'Black bean quesadillas', 'Lunch', 15, '2', { s: 'board', c: [['#F2C14E', 2.4, 3], '#2B2B2B', '#E9A23B'] },
+    ['1 × 400 g tin black beans, drained', '1 tsp ground cumin', '100 g sweetcorn', '120 g Cheddar, grated', '4 tortillas', 'Salsa and sour cream to serve'],
+    ['Lightly mash the beans with the cumin and a pinch of salt; stir in the sweetcorn.', 'Spread over 2 tortillas, add the cheese and top with the other tortillas.', 'Cook in a dry pan over medium heat 2–3 minutes per side until crisp and melted.', 'Cut into wedges and serve with salsa.']),
+  R('chicken-caesar', 'Chicken Caesar salad', 'Lunch', 25, '2', { s: 'bowl', m: '#FFFFFF', b: '#E8F2D0', c: ['#7CB342', '#A5D46A', '#F2D7A0', '#E9C46A', '#F5F5F0'] },
+    ['2 chicken breasts', '2 slices bread, cubed', '3 tbsp olive oil', '1 large romaine lettuce, torn', '30 g Parmesan, shaved', '3 tbsp mayonnaise', '1 tsp Dijon mustard', '1 garlic clove, grated', '½ lemon, juiced', '2 anchovy fillets, mashed (optional)'],
+    ['Season the chicken and cook in 1 tbsp oil over medium heat, 6–7 minutes per side, until cooked through. Rest, then slice.', 'Toss the bread cubes in the remaining oil and fry until crisp.', 'Whisk the mayonnaise, mustard, garlic, lemon juice and anchovies with a splash of water.', 'Toss the lettuce with the dressing, then top with chicken, croutons and Parmesan.']),
+  R('chicken-noodle-soup', 'Chicken noodle soup', 'Lunch', 40, '4', { s: 'bowl', m: '#3A86FF', b: '#F2D38B', n: '#FFF3C4', c: ['#F4A259', '#F4EAD5'], h: '#4E9F3D' },
+    ['1 tbsp olive oil', '1 onion, diced', '2 carrots, sliced', '2 celery sticks, sliced', '2 garlic cloves, chopped', '1.5 litres chicken stock', '2 chicken breasts', '100 g egg noodles', '1 small bunch parsley, chopped'],
+    ['Soften the onion, carrot and celery in the oil for 8 minutes.', 'Add the garlic, stock and whole chicken breasts; simmer 15 minutes.', 'Lift out the chicken, shred it with two forks and return it to the pot.', 'Add the noodles and cook 4 minutes, then stir in the parsley and season.']),
+  R('falafel-wraps', 'Falafel wraps', 'Lunch', 30, '4', { s: 'board', c: [['#F3E1B6', 2.6, 2], ['#8B5A2B', 1, 8], '#7CB342', '#E63946'] },
+    ['1 × 400 g tin chickpeas, drained and dried', '1 small onion, roughly chopped', '2 garlic cloves', '1 small bunch parsley', '1 tsp ground cumin', '1 tsp ground coriander', '3 tbsp plain flour', '4 tbsp oil', '4 flatbreads', '4 tbsp hummus or yogurt', 'Lettuce, tomato and cucumber to fill'],
+    ['Pulse the chickpeas, onion, garlic, parsley and spices in a food processor until coarse.', 'Stir in the flour and a pinch of salt, then shape into 12 small patties.', 'Fry in the oil over medium heat, 3 minutes per side, until crisp.', 'Spread the flatbreads with hummus, add salad and falafel, and roll up.']),
+  R('halloumi-couscous', 'Halloumi couscous salad', 'Lunch', 25, '2', { s: 'bowl', m: '#2A9D8F', b: '#F2DCA0', c: [['#F5E9D0', 1.6, 4], '#E63946', '#7CB342', '#F4A259'] },
+    ['150 g couscous', '200 ml hot vegetable stock', '1 × 225 g block halloumi, sliced', '1 courgette, diced', '1 red pepper, diced', '2 tbsp olive oil', '1 lemon, juiced', '1 handful mint, chopped'],
+    ['Pour the stock over the couscous, cover and leave 5 minutes, then fluff with a fork.', 'Fry the courgette and pepper in 1 tbsp oil until soft and charred, about 8 minutes.', 'Fry the halloumi in a dry pan until golden on both sides.', 'Toss the couscous with the vegetables, lemon juice, remaining oil and mint, then top with halloumi.']),
+  R('squash-soup', 'Butternut squash soup', 'Lunch', 50, '4', { s: 'bowl', m: '#264653', b: '#F28C28', c: ['#FFF4E0'], z: .5, h: '#2D6A4F' },
+    ['1 butternut squash, peeled and chunked', '1 onion, chopped', '2 tbsp olive oil', '1 tsp ground cumin', '800 ml vegetable stock', '100 ml single cream or coconut milk', 'Salt and pepper'],
+    ['Heat the oven to 200 °C. Roast the squash and onion with the oil, cumin and seasoning for 35 minutes.', 'Tip into a pan with the stock and bring to a simmer.', 'Blend until smooth, stir in most of the cream and season.', 'Serve with a swirl of the remaining cream.']),
+  // Dinner
+  R('aglio-olio', 'Spaghetti aglio e olio', 'Dinner', 20, '2', { s: 'plate', n: '#F2D27A', c: [['#E04A2F', .45, 10]], h: '#3E8E3A' },
+    ['200 g spaghetti', '5 tbsp olive oil', '4 garlic cloves, thinly sliced', '½ tsp chilli flakes', '1 small bunch parsley, chopped', 'Salt', 'Parmesan to serve (optional)'],
+    ['Cook the spaghetti in well-salted water until al dente; keep a mug of the pasta water.', 'Meanwhile, warm the oil with the garlic over low heat until the garlic is pale gold.', 'Add the chilli flakes, then the drained pasta and a splash of pasta water.', 'Toss hard until glossy, stir in the parsley and serve.']),
+  R('carbonara', 'Spaghetti carbonara', 'Dinner', 20, '2', { s: 'plate', n: '#F6DB8A', c: [['#C0392B', .6, 10], ['#F2F2F2', .5, 8]], h: '#333333' },
+    ['200 g spaghetti', '100 g pancetta or guanciale, diced', '2 eggs', '1 egg yolk', '50 g Parmesan or pecorino, finely grated', '1 tsp black pepper, coarsely ground'],
+    ['Cook the spaghetti in salted water; keep a mug of the pasta water.', 'Fry the pancetta in a dry pan until crisp.', 'Whisk the eggs, yolk, cheese and pepper together.', 'Take the pan off the heat, add the drained pasta and a splash of pasta water, then the egg mixture.', 'Toss quickly until creamy, adding more water if needed. Serve at once.'],
+    'Keep the pan off the heat when the eggs go in so they turn silky, not scrambled.'),
+  R('lemon-chicken', 'Lemon garlic chicken traybake', 'Dinner', 45, '4', { s: 'tray', b: '#E9C27A', c: [['#C9772E', 1.8, 5], '#F2E4B0', ['#F4D35E', 1.2, 4]], h: '#4F8F3A' },
+    ['8 bone-in chicken thighs', '2 lemons', '6 garlic cloves, crushed', '3 tbsp olive oil', '1 tsp dried oregano', '600 g baby potatoes, halved', 'Salt and pepper'],
+    ['Heat the oven to 220 °C (200 °C fan).', 'Toss the potatoes with half the oil, salt and pepper in a roasting tin.', 'Rub the chicken with the remaining oil, garlic, oregano, juice of 1 lemon, salt and pepper.', 'Nestle the chicken skin-side up among the potatoes with the second lemon cut into wedges.', 'Roast 35–40 minutes until the skin is crisp and the juices run clear.']),
+  R('chickpea-curry', 'Chickpea & spinach curry', 'Dinner', 30, '4', { s: 'bowl', m: '#2F6DB5', b: '#E8A23A', c: ['#F0CF8A', '#2F7D32'], z: .7, h: '#3B8E3E' },
+    ['1 tbsp oil', '1 onion, chopped', '3 garlic cloves, crushed', '1 thumb ginger, grated', '2 tbsp curry paste', '2 × 400 g tins chickpeas, drained', '1 × 400 ml tin coconut milk', '200 g spinach', '½ lime, juiced'],
+    ['Fry the onion in the oil until soft, about 6 minutes.', 'Add the garlic, ginger and curry paste; cook 1 minute.', 'Add the chickpeas and coconut milk; simmer 15 minutes.', 'Stir in the spinach until wilted, then finish with lime and salt.', 'Serve with rice or flatbread.']),
+  R('beef-tacos', 'Beef tacos', 'Dinner', 25, '4', { s: 'board', c: [['#F3D9A4', 2.2, 3], '#8B4A2B', '#7BC043', '#E63946', '#FFD166'] },
+    ['500 g minced beef', '1 onion, finely chopped', '2 tsp ground cumin', '1 tsp smoked paprika', '1 tsp chilli powder', '3 tbsp tomato purée', '8 small tortillas', 'Lettuce, tomato, cheese and sour cream to serve'],
+    ['Brown the beef and onion in a hot pan, breaking it up, about 8 minutes.', 'Add the spices and tomato purée with 100 ml water; simmer 5 minutes.', 'Warm the tortillas in a dry pan.', 'Fill with the beef and your toppings.']),
+  R('mushroom-risotto', 'Mushroom risotto', 'Dinner', 40, '3', { s: 'bowl', m: '#FFFFFF', b: '#EADBB8', c: ['#8C6A4F', '#A57E5F'], h: '#5B8C3A' },
+    ['1 litre hot vegetable stock', '2 tbsp butter', '1 tbsp olive oil', '1 onion, finely chopped', '250 g mushrooms, sliced', '250 g risotto rice', '100 ml white wine', '40 g Parmesan, grated'],
+    ['Fry the mushrooms in the oil until golden; set aside.', 'Soften the onion in half the butter, about 5 minutes.', 'Stir in the rice for 1 minute, then add the wine and let it bubble away.', 'Add the stock a ladle at a time, stirring, until the rice is creamy and just tender, about 18 minutes.', 'Stir in the mushrooms, remaining butter and Parmesan; rest 2 minutes before serving.']),
+  R('fried-rice', 'Egg fried rice', 'Dinner', 20, '2', { s: 'bowl', m: '#E63946', b: '#F2E2B5', c: ['#7CB342', '#F4C430', '#E07A3F'], z: .6, h: '#4E9F3D' },
+    ['300 g cooked rice, cold', '2 eggs, beaten', '2 tbsp oil', '100 g frozen peas', '2 spring onions, sliced', '2 tbsp soy sauce', '1 tsp sesame oil'],
+    ['Heat the oil in a wok until very hot.', 'Add the peas and cook 1 minute, then the rice; stir-fry 3 minutes.', 'Push the rice aside, pour the eggs into the gap and scramble, then mix through.', 'Add the soy, sesame oil and spring onions; toss and serve.'],
+    'Day-old rice fries best.'),
+  R('glazed-salmon', 'Soy-honey glazed salmon', 'Dinner', 20, '2', { s: 'plate', c: [['#F08A5D', 2.2, 2], '#4E9F3D', '#FFFFFF'], h: '#2E7D32' },
+    ['2 salmon fillets', '2 tbsp soy sauce', '1 tbsp honey', '1 garlic clove, grated', '1 tsp grated ginger', '1 tsp oil', 'Sesame seeds and spring onion to serve'],
+    ['Mix the soy, honey, garlic and ginger.', 'Sear the salmon skin-side down in the oil over medium-high heat, 4 minutes.', 'Flip, pour in the glaze and cook 2–3 minutes, spooning it over.', 'Scatter with sesame seeds and spring onion; serve with rice and greens.']),
+  R('lentil-bolognese', 'Lentil bolognese', 'Dinner', 45, '4', { s: 'plate', n: '#F0CF7A', c: [['#A63D2A', 1.3, 8], '#8E3B22'], h: '#3E8E3A' },
+    ['2 tbsp olive oil', '1 onion, finely diced', '1 carrot, finely diced', '1 celery stick, finely diced', '2 garlic cloves, chopped', '2 tbsp tomato purée', '200 g dried red lentils', '1 × 400 g tin chopped tomatoes', '600 ml vegetable stock', '1 tsp dried oregano', '300 g spaghetti'],
+    ['Soften the onion, carrot and celery in the oil, about 8 minutes.', 'Add the garlic and tomato purée; cook 1 minute.', 'Add the lentils, tomatoes, stock and oregano; simmer 25 minutes, stirring now and then.', 'Cook the spaghetti meanwhile, season the sauce and serve on top.']),
+  R('green-curry', 'Thai green curry', 'Dinner', 30, '4', { s: 'bowl', m: '#FFFFFF', b: '#C7D98A', c: ['#F4F1DE', '#E63946', '#4F772D'], h: '#2D6A4F' },
+    ['1 tbsp oil', '3 tbsp green curry paste', '1 × 400 ml tin coconut milk', '500 g chicken thighs, sliced (or firm tofu)', '1 red pepper, sliced', '100 g green beans, halved', '1 tbsp fish sauce', '1 tsp sugar', '1 handful Thai basil'],
+    ['Fry the curry paste in the oil for 1 minute until fragrant.', 'Add half the coconut milk and let it bubble for 2 minutes.', 'Add the chicken and cook 5 minutes, then the rest of the coconut milk, the pepper and beans.', 'Simmer 8 minutes, season with fish sauce and sugar, and stir in the basil.', 'Serve with jasmine rice.']),
+  R('chilli', 'Chilli con carne', 'Dinner', 60, '6', { s: 'bowl', m: '#F4A261', b: '#8E2C1C', c: ['#5A1F14', '#E9C46A', '#FFFFFF'], z: .7, h: '#2D6A4F' },
+    ['1 tbsp oil', '1 onion, chopped', '1 red pepper, chopped', '2 garlic cloves, chopped', '500 g minced beef', '2 tsp chilli powder', '2 tsp ground cumin', '1 tsp smoked paprika', '2 × 400 g tins chopped tomatoes', '1 × 400 g tin kidney beans, drained', '1 beef stock cube', '1 square dark chocolate (optional)'],
+    ['Soften the onion and pepper in the oil for 6 minutes, then add the garlic.', 'Add the beef and brown, breaking it up.', 'Stir in the spices, tomatoes, beans and crumbled stock cube with 150 ml water.', 'Simmer gently for 40 minutes, stirring now and then, then stir in the chocolate.', 'Serve with rice, sour cream and grated cheese.']),
+  R('teriyaki', 'Teriyaki chicken rice bowl', 'Dinner', 25, '2', { s: 'bowl', m: '#1D3557', b: '#FAF7F0', c: ['#8B4513', '#A0522D', '#2E7D32'], h: '#F5F0DC' },
+    ['4 boneless chicken thighs, cut into chunks', '1 tbsp oil', '4 tbsp soy sauce', '2 tbsp mirin', '1 tbsp honey', '1 tsp grated ginger', '1 tsp cornflour', '150 g rice', '1 tbsp sesame seeds'],
+    ['Cook the rice.', 'Fry the chicken in the oil over medium-high heat until golden and cooked, 8–10 minutes.', 'Mix the soy, mirin, honey, ginger and cornflour with 3 tbsp water.', 'Pour over the chicken and bubble until thick and glossy.', 'Serve on the rice with sesame seeds.']),
+  R('margherita', 'Homemade margherita pizza', 'Dinner', 90, '2', { s: 'pizza', b: '#D7442E', c: [['#FBF5E6', 1.6, 7]], h: '#2E7D32' },
+    ['300 g strong white flour', '1 tsp fast-action yeast', '1 tsp salt', '200 ml warm water', '1 tbsp olive oil', '150 g passata', '1 garlic clove, grated', '2 × 125 g balls mozzarella', '1 handful basil'],
+    ['Mix the flour, yeast, salt, water and oil to a soft dough and knead for 5 minutes.', 'Cover and leave to rise for 1 hour.', 'Heat the oven as hot as it goes with a tray inside. Mix the passata with the garlic and a pinch of salt.', 'Split the dough in two and stretch each piece into a thin round.', 'Spread with sauce, tear over the mozzarella and bake on the hot tray for 8–10 minutes. Finish with basil.']),
+  R('beef-broccoli', 'Beef & broccoli stir-fry', 'Dinner', 20, '2', { s: 'pan', b: '#6B3A1E', c: ['#2E8B57', '#3C9D5D', '#7A4A2B'] },
+    ['250 g beef steak, thinly sliced', '1 tsp cornflour', '1 head broccoli, cut into florets', '1 tbsp oil', '2 garlic cloves, sliced', '3 tbsp soy sauce', '1 tbsp oyster sauce', '1 tsp sugar'],
+    ['Toss the beef with the cornflour.', 'Steam or blanch the broccoli for 2 minutes.', 'Stir-fry the beef in the oil over high heat until browned, then add the garlic for 30 seconds.', 'Add the broccoli, soy, oyster sauce, sugar and 3 tbsp water; toss until glossy.', 'Serve with rice.']),
+  R('fish-tacos', 'Crispy fish tacos', 'Dinner', 25, '4', { s: 'board', c: [['#F3E1B6', 2.4, 3], '#F4A259', '#9B5DE5', '#7CB342', '#FFFFFF'] },
+    ['400 g white fish fillets', '1 tsp smoked paprika', '1 tsp ground cumin', '1 tbsp oil', '¼ red cabbage, finely shredded', '1 lime, juiced', '4 tbsp soured cream or yogurt', '8 small tortillas', '1 avocado, sliced', '1 small bunch coriander'],
+    ['Rub the fish with the spices, oil and salt.', 'Toss the cabbage with half the lime juice and a pinch of salt.', 'Cook the fish in a hot pan 3 minutes per side, then flake into chunks.', 'Mix the soured cream with the remaining lime juice.', 'Fill warm tortillas with cabbage, fish, avocado, sauce and coriander.']),
+  R('sausage-bean', 'Sausage & bean casserole', 'Dinner', 45, '4', { s: 'pan', b: '#C2462B', c: [['#7B3F20', 1.5, 6], '#F1E3C2'], h: '#3E8E3A' },
+    ['8 pork sausages', '1 tbsp oil', '1 onion, sliced', '2 garlic cloves, chopped', '1 tsp smoked paprika', '1 × 400 g tin chopped tomatoes', '2 × 400 g tins cannellini or butter beans, drained', '200 ml chicken stock', '1 tsp dried thyme'],
+    ['Brown the sausages all over in the oil, then set aside.', 'Soften the onion in the same pan for 6 minutes, then add the garlic and paprika.', 'Add the tomatoes, beans, stock and thyme, and return the sausages.', 'Simmer 25 minutes until the sauce is thick. Serve with bread or mash.']),
+  R('pesto-gnocchi', 'Pesto gnocchi with peas', 'Dinner', 15, '2', { s: 'bowl', m: '#FFFFFF', b: '#7BA23F', c: ['#F2E3B3', '#9ACD32'], h: '#F5F5F5' },
+    ['500 g fresh gnocchi', '150 g frozen peas', '3 tbsp green pesto', '1 tbsp butter', '30 g Parmesan, grated', '½ lemon, juiced'],
+    ['Cook the gnocchi and peas together in salted water until the gnocchi float, about 2 minutes.', 'Drain, keeping a splash of the water.', 'Fry in the butter for 2 minutes until the gnocchi colour a little.', 'Stir in the pesto, lemon juice and a little cooking water, then top with Parmesan.']),
+  R('fajitas', 'Chicken fajitas', 'Dinner', 25, '4', { s: 'pan', c: ['#E63946', '#FFD166', '#7CB342', '#C68B59', '#F4F1DE'] },
+    ['2 chicken breasts, sliced into strips', '2 peppers, sliced', '1 red onion, sliced', '2 tbsp oil', '2 tsp smoked paprika', '1 tsp ground cumin', '1 tsp garlic powder', '1 lime, juiced', '8 tortillas', 'Soured cream, salsa and cheese to serve'],
+    ['Toss the chicken with the spices, half the oil and a pinch of salt.', 'Cook the peppers and onion in the remaining oil over high heat until charred, then set aside.', 'Cook the chicken in the same pan for 6–7 minutes until cooked through.', 'Return the vegetables, squeeze over the lime and toss.', 'Serve in warm tortillas with your toppings.']),
+  R('pad-thai', 'Prawn pad thai', 'Dinner', 25, '2', { s: 'plate', n: '#E8C07D', c: ['#F28482', '#7CB342', '#D4A373'], h: '#2D6A4F' },
+    ['150 g flat rice noodles', '2 tbsp fish sauce', '2 tbsp lime juice', '1 tbsp brown sugar', '1 tbsp tamarind paste or ketchup', '1 tbsp oil', '150 g raw prawns', '2 eggs', '100 g beansprouts', '3 spring onions, sliced', '2 tbsp roasted peanuts, chopped'],
+    ['Soak the noodles in hot water until just soft, then drain.', 'Mix the fish sauce, lime juice, sugar and tamarind.', 'Stir-fry the prawns in the oil until pink, push aside and scramble the eggs.', 'Add the noodles and sauce and toss for 2 minutes.', 'Add the beansprouts and spring onions, and top with peanuts and lime wedges.']),
+  R('baked-cod', 'Baked cod with tomatoes & olives', 'Dinner', 30, '2', { s: 'tray', b: '#E76F51', c: [['#FAF3E3', 2.2, 2], '#2B2B2B', '#E63946'], h: '#3E8E3A' },
+    ['2 cod fillets', '250 g cherry tomatoes, halved', '1 handful black olives', '1 tbsp capers', '2 garlic cloves, sliced', '2 tbsp olive oil', '1 small bunch parsley, chopped'],
+    ['Heat the oven to 200 °C (180 °C fan).', 'Toss the tomatoes, olives, capers and garlic with the oil in a baking dish and roast 10 minutes.', 'Nestle in the cod, season and roast another 12–15 minutes until it flakes.', 'Scatter with parsley and serve with bread or potatoes.']),
+  R('pork-chops', 'Honey mustard pork chops', 'Dinner', 25, '2', { s: 'plate', c: [['#B8763E', 2.2, 2], '#7CB342', '#F2CC8F'], h: '#3E8E3A' },
+    ['2 pork chops', '1 tbsp oil', '1 tbsp wholegrain mustard', '1 tbsp honey', '100 ml chicken stock', '2 tbsp crème fraîche', '200 g green beans'],
+    ['Season the chops and fry in the oil over medium-high heat, 4–5 minutes per side. Set aside to rest.', 'Boil the green beans for 4 minutes.', 'Add the mustard, honey and stock to the pan and bubble for 2 minutes.', 'Stir in the crème fraîche, return the chops and spoon over the sauce. Serve with the beans.']),
+  // Dessert
+  R('choc-chip-cookies', 'Chocolate chip cookies', 'Dessert', 30, 'Makes 20', { s: 'board', c: [['#D9A05B', 1.8, 6], ['#4A2C1A', .4, 18]] },
+    ['115 g butter, softened', '100 g brown sugar', '50 g caster sugar', '1 egg', '1 tsp vanilla extract', '180 g plain flour', '½ tsp bicarbonate of soda', '¼ tsp salt', '150 g chocolate chips'],
+    ['Heat the oven to 180 °C (160 °C fan) and line two trays.', 'Beat the butter and sugars until creamy, then beat in the egg and vanilla.', 'Stir in the flour, bicarbonate and salt, then the chocolate chips.', 'Roll into balls, space well apart, and bake 10–12 minutes.', 'Cool 5 minutes on the tray before moving.']),
+  R('apple-crumble', 'Apple crumble', 'Dessert', 50, '6', { s: 'tray', b: '#E0B26A', c: ['#C98A3E', '#F2D49B', '#B5652A'], z: .8 },
+    ['1 kg apples, peeled and chunked', '50 g sugar', '1 tsp ground cinnamon', '150 g plain flour', '100 g cold butter, cubed', '75 g brown sugar', '50 g rolled oats'],
+    ['Heat the oven to 190 °C (170 °C fan).', 'Toss the apples with the sugar and cinnamon in a baking dish.', 'Rub the flour and butter together to rough crumbs, then stir in the brown sugar and oats.', 'Scatter over the fruit and bake 35–40 minutes until golden and bubbling.']),
+  R('mug-cake', 'Chocolate mug cake', 'Dessert', 5, '1', { s: 'mug', m: '#FF8FAB', b: '#5A3220', c: [['#3B1F12', .6, 6]] },
+    ['4 tbsp plain flour', '3 tbsp sugar', '2 tbsp cocoa powder', '¼ tsp baking powder', '3 tbsp milk', '2 tbsp vegetable oil', '1 tbsp chocolate chips'],
+    ['Mix the dry ingredients in a large mug.', 'Stir in the milk and oil until smooth, then add the chocolate chips.', 'Microwave on high for 70–90 seconds until just set in the middle.', 'Let it stand 1 minute before eating.'],
+    'Microwaves vary; start checking at 60 seconds.'),
+  R('banana-bread', 'Banana bread', 'Dessert', 70, '10', { s: 'board', c: [['#B5702E', 2.6, 3], ['#F6E7A8', 1, 4]] },
+    ['3 very ripe bananas', '75 g butter, melted', '150 g brown sugar', '1 egg, beaten', '1 tsp vanilla extract', '1 tsp bicarbonate of soda', '¼ tsp salt', '190 g plain flour'],
+    ['Heat the oven to 180 °C (160 °C fan) and line a 900 g loaf tin.', 'Mash the bananas, then stir in the melted butter, sugar, egg and vanilla.', 'Stir in the bicarbonate, salt and flour until just combined.', 'Pour into the tin and bake 55–60 minutes until a skewer comes out clean.', 'Cool in the tin for 10 minutes before turning out.']),
+  R('brownies', 'Fudgy brownies', 'Dessert', 40, 'Makes 16', { s: 'tray', b: '#4A2C1A', c: ['#3A2214', '#6B4226'], z: .8 },
+    ['150 g dark chocolate', '150 g butter', '250 g caster sugar', '3 eggs', '100 g plain flour', '30 g cocoa powder', '¼ tsp salt'],
+    ['Heat the oven to 180 °C (160 °C fan) and line a 20 cm square tin.', 'Melt the chocolate and butter together, then cool slightly.', 'Whisk the sugar and eggs until pale, then fold in the chocolate.', 'Sift in the flour, cocoa and salt and fold until just combined.', 'Bake 22–25 minutes until set at the edges with a slight wobble in the middle. Cool before cutting.']),
+  R('lemon-posset', 'Lemon posset', 'Dessert', 15, '4', { s: 'jar', b: '#FFF1A8', c: ['#FFE45C', '#E63946', '#4E9F3D'] },
+    ['600 ml double cream', '150 g caster sugar', '2 lemons, zested and juiced', 'Berries to serve'],
+    ['Bring the cream and sugar to the boil in a pan, stirring, then bubble for 3 minutes.', 'Take off the heat and stir in the lemon zest and juice.', 'Pour into 4 glasses and chill for at least 3 hours until set.', 'Top with berries.'],
+    'Needs 3 hours in the fridge to set.'),
+  R('chocolate-mousse', 'Chocolate mousse', 'Dessert', 20, '4', { s: 'jar', b: '#5C3420', c: ['#7B4A2E', '#FFFFFF', '#C0392B'] },
+    ['150 g dark chocolate', '3 eggs, separated', '1 tbsp caster sugar', 'Pinch of salt', 'Raspberries to serve'],
+    ['Melt the chocolate and let it cool a little, then stir in the egg yolks.', 'Whisk the egg whites with the salt to soft peaks, then whisk in the sugar.', 'Fold a third of the whites into the chocolate, then gently fold in the rest.', 'Spoon into 4 glasses and chill for at least 2 hours. Top with raspberries.'],
+    'Uses raw eggs. Chill for 2 hours before serving.'),
+  // Snack
+  R('guacamole', 'Guacamole', 'Snack', 10, '4', { s: 'bowl', m: '#F4A259', b: '#9BC53D', c: ['#E63946', '#F1FAEE', '#6A994E'], z: .6 },
+    ['3 ripe avocados', '1 lime, juiced', '½ small red onion, finely chopped', '1 tomato, deseeded and diced', '1 green chilli, finely chopped', '1 small bunch coriander, chopped', 'Salt'],
+    ['Mash the avocados with the lime juice, leaving some chunks.', 'Fold in the onion, tomato, chilli and coriander.', 'Season with salt and more lime to taste.']),
+  R('hummus', 'Hummus', 'Snack', 10, '6', { s: 'bowl', m: '#FFFFFF', b: '#EBD5A8', c: [['#E9C46A', .9, 3], ['#C1440E', .35, 14]], h: '#6A994E' },
+    ['1 × 400 g tin chickpeas (keep the liquid)', '3 tbsp tahini', '1 lemon, juiced', '1 garlic clove', '½ tsp ground cumin', '2 tbsp olive oil', 'Salt'],
+    ['Blend the chickpeas, tahini, lemon, garlic, cumin and a pinch of salt.', 'With the motor running, add 3–4 tbsp of the chickpea liquid until very smooth.', 'Spoon into a bowl, swirl, and drizzle with olive oil.']),
+  R('bruschetta', 'Tomato bruschetta', 'Snack', 15, '4', { s: 'board', c: [['#E0B06A', 2, 4], '#E63946', '#2E7D32'] },
+    ['4 ripe tomatoes, diced', '1 garlic clove, halved', '1 small bunch basil, torn', '3 tbsp olive oil', '1 tsp red wine vinegar', '8 slices ciabatta or baguette', 'Salt and pepper'],
+    ['Mix the tomatoes with the basil, 2 tbsp oil, vinegar and seasoning; leave 10 minutes.', 'Toast or grill the bread until golden.', 'Rub each slice with the cut garlic and drizzle with the remaining oil.', 'Spoon the tomatoes on top just before serving.']),
+  R('roasted-chickpeas', 'Crunchy roasted chickpeas', 'Snack', 35, '4', { s: 'bowl', m: '#E63946', b: '#F4EFE6', c: ['#D99A4E', '#C47F35', '#E2A65E'], z: .55 },
+    ['1 × 400 g tin chickpeas, drained and patted dry', '1 tbsp olive oil', '1 tsp smoked paprika', '½ tsp ground cumin', '½ tsp salt'],
+    ['Heat the oven to 200 °C (180 °C fan).', 'Toss the chickpeas with the oil, spices and salt.', 'Spread on a tray and roast 25–30 minutes, shaking halfway, until crunchy.', 'Cool for a few minutes; they crisp up more as they cool.']),
+  R('tzatziki', 'Tzatziki', 'Snack', 10, '4', { s: 'bowl', m: '#3A86FF', b: '#F4F4EC', c: [['#6A994E', .4, 18], ['#E9C46A', .8, 2]], h: '#2D6A4F' },
+    ['½ cucumber', '250 g Greek yogurt', '1 garlic clove, grated', '1 tbsp olive oil', '1 tbsp chopped dill or mint', '1 tsp lemon juice', 'Salt'],
+    ['Grate the cucumber and squeeze out as much water as you can.', 'Mix with the yogurt, garlic, oil, herbs and lemon juice.', 'Season with salt and chill until needed. Serve with pitta or vegetables.'])
+];
+
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// On-phone storage: recipes and photo blobs in IndexedDB.
+const idb = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      const q = indexedDB.open('recipe-roulette', 1);
+      q.onupgradeneeded = () => { q.result.createObjectStore('recipes', { keyPath: 'id' }); q.result.createObjectStore('photos'); };
+      q.onsuccess = () => { this.db = q.result; res(this.db); };
+      q.onerror = () => rej(q.error);
+    });
+  },
+  run(name, mode, fn) {
+    if (!this.db) return Promise.reject(new Error('no-db'));
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(name, mode), req = fn(t.objectStore(name));
+      t.oncomplete = () => res(req && req.result);
+      t.onerror = () => rej(t.error);
+      t.onabort = () => rej(t.error);
+    });
+  },
+  all(name) { return this.run(name, 'readonly', s => s.getAll()); },
+  get(name, k) { return this.run(name, 'readonly', s => s.get(k)); },
+  put(name, v, k) { return this.run(name, 'readwrite', s => k === undefined ? s.put(v) : s.put(v, k)); },
+  del(name, k) { return this.run(name, 'readwrite', s => s.delete(k)); }
+};
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const photoURLs = new Map();
+async function photoURL(id) {
+  if (photoURLs.has(id)) return photoURLs.get(id);
+  const blob = await idb.get('photos', id).catch(() => null);
+  const url = blob ? URL.createObjectURL(blob) : '';
+  photoURLs.set(id, url);
+  return url;
+}
+async function savePhoto(blob) { const id = newId('p'); await idb.put('photos', blob, id); return id; }
+async function dropPhoto(id) {
+  await idb.del('photos', id).catch(() => {});
+  if (photoURLs.get(id)) URL.revokeObjectURL(photoURLs.get(id));
+  photoURLs.delete(id);
+}
+
+function el(tag, props, ...kids) {
+  const n = document.createElement(tag);
+  for (const k in props || {}) {
+    if (props[k] == null) continue;
+    if (k === 'class') n.className = props[k];
+    else if (k === 'text') n.textContent = props[k];
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), props[k]);
+    else n.setAttribute(k, props[k]);
+  }
+  kids.flat().forEach(c => { if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(c)); });
+  return n;
+}
+
+// ---- Data shape ----
+const HEX = /^#[0-9a-f]{3,8}$/i;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+function cleanArt(a) {
+  if (!a || typeof a !== 'object') return null;
+  const out = {};
+  if (SHAPES.includes(a.s)) out.s = a.s;
+  ['b', 'h', 'm', 'n'].forEach(k => { if (typeof a[k] === 'string' && HEX.test(a[k])) out[k] = a[k]; });
+  if (Array.isArray(a.c)) out.c = a.c.slice(0, 6).map(x => {
+    if (Array.isArray(x)) return HEX.test(x[0]) ? [x[0], clamp(Number(x[1]) || 1, .3, 3), Number(x[2]) ? clamp(Math.round(x[2]), 1, 30) : 0] : null;
+    return typeof x === 'string' && HEX.test(x) ? x : null;
+  }).filter(Boolean);
+  if (typeof a.e === 'number') out.e = clamp(Math.round(a.e), 0, 6);
+  if (typeof a.z === 'number') out.z = clamp(a.z, .3, 3);
+  return out;
+}
+function normalize(id, d, src) {
+  const list = v => Array.isArray(v) ? v.map(String).map(s => s.trim()).filter(Boolean) : [];
+  return {
+    id, src,
+    title: String(d.title || 'Untitled recipe').slice(0, 120),
+    category: CATS.includes(d.category) ? d.category : 'Dinner',
+    minutes: Math.max(0, Math.round(Number(d.minutes) || 0)),
+    serves: String(d.serves == null ? '' : d.serves).slice(0, 30),
+    ingredients: list(d.ingredients),
+    steps: list(d.steps),
+    notes: String(d.notes || ''),
+    art: cleanArt(d.art),
+    photo: typeof d.photo === 'string' && /^p[a-z0-9]{4,40}$/.test(d.photo) ? d.photo : '',
+    createdAt: Number(d.createdAt) || 0
+  };
+}
+const bodyOf = r => ({ title: r.title, category: r.category, minutes: r.minutes, serves: r.serves, ingredients: r.ingredients, steps: r.steps, notes: r.notes, art: r.art || null, photo: r.photo || '' });
+
+// ---- State ----
+let myRecipes = [];
+let storageOK = true;
+let apiKey = store.get('rr.apiKey', '');
+const savedFilters = store.get('rr.filters', {});
+const filters = {
+  cat: ['Any', ...CATS].includes(savedFilters.cat) ? savedFilters.cat : 'Any',
+  quick: !!savedFilters.quick,
+  source: ['all', 'mine', 'classic'].includes(savedFilters.source) ? savedFilters.source : 'all'
+};
+let current = null, currentJSON = '', view = 'shuffle', prevView = 'shuffle', editing = null;
+let servings = 0, checked = new Set();
+let wantAwake = false, wakeLock = null;
+const classics = CLASSICS.map(r => normalize(r.id, r, 'classic'));
+
+const key = r => r.src + ':' + r.id;
+const mine = () => myRecipes;
+const all = () => classics.concat(mine());
+const fmtTime = m => !m ? '' : m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+const saveFilters = () => store.set('rr.filters', filters);
+
+function pool() {
+  return all().filter(r =>
+    (filters.cat === 'Any' || r.category === filters.cat) &&
+    (!filters.quick || (r.minutes > 0 && r.minutes <= 30)) &&
+    (filters.source === 'all' || (filters.source === 'mine') === (r.src !== 'classic')));
+}
+
+// ---- Dish illustrations (drawn on canvas, cached as images) ----
+const TABLE = { Breakfast: ['#FDF4D6', '#F6E2A4'], Lunch: ['#E4F5EA', '#C4E9D2'], Dinner: ['#FDEAE3', '#F7CFC1'], Dessert: ['#F0EBFD', '#DCD1FA'], Snack: ['#E3F1FC', '#C5E0F7'] };
+const DEFAULT_ART = {
+  Breakfast: { s: 'plate', c: ['#F4C04E', '#FFFFFF', '#E8743B'], h: '#4E9F3D' },
+  Lunch: { s: 'bowl', m: '#2A9D8F', b: '#F4EFE6', c: ['#7CB342', '#E63946', '#F4A259', '#F1E3C2'] },
+  Dinner: { s: 'plate', c: ['#B5651D', '#7CB342', '#F2CC8F', '#E63946'], h: '#3E8E3A' },
+  Dessert: { s: 'plate', c: [['#5C3420', 1.8, 3], '#F6E7A8', '#E63946'] },
+  Snack: { s: 'board', c: ['#E9C46A', '#E63946', '#7CB342', '#F4A259'] }
+};
+function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+function drawDish(ctx, W, H, r) {
+  const a = Object.assign({}, DEFAULT_ART[r.category] || DEFAULT_ART.Dinner, r.art || {});
+  const rand = rng(hash(r.id + '|' + r.title));
+  const R = Math.min(W, H) * 0.42;
+  let cx = W / 2, cy = H / 2;
+
+  // Soft two-tone backdrop
+  const [t0, t1] = TABLE[r.category] || TABLE.Dinner;
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, t0); bg.addColorStop(1, t1);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  const shadow = on => { ctx.shadowColor = on ? 'rgba(20,30,25,.22)' : 'transparent'; ctx.shadowBlur = on ? R * .14 : 0; ctx.shadowOffsetY = on ? R * .06 : 0; };
+  const circle = (x, y, rad, fill) => { ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); };
+  const rrect = (x, y, w, h, rad, fill) => { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, rad); else ctx.rect(x, y, w, h); ctx.fillStyle = fill; ctx.fill(); };
+  const blob = (x, y, rad, fill) => {
+    const n = 9, pts = [];
+    for (let i = 0; i < n; i++) { const t = i / n * Math.PI * 2, rr = rad * (0.78 + rand() * 0.4); pts.push([x + Math.cos(t) * rr, y + Math.sin(t) * rr]); }
+    ctx.beginPath();
+    ctx.moveTo((pts[0][0] + pts[n - 1][0]) / 2, (pts[0][1] + pts[n - 1][1]) / 2);
+    for (let i = 0; i < n; i++) { const p = pts[i], q = pts[(i + 1) % n]; ctx.quadraticCurveTo(p[0], p[1], (p[0] + q[0]) / 2, (p[1] + q[1]) / 2); }
+    ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+  };
+
+  let area;
+  if (a.s === 'jar') {
+    const w = R * 1.0, h = R * 1.8, x = cx - w / 2, y = cy - h / 2 + R * .04;
+    shadow(true); rrect(x, y, w, h, R * .16, 'rgba(255,255,255,.7)'); shadow(false);
+    ctx.save(); ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x + R * .06, y + R * .06, w - R * .12, h - R * .12, R * .12); else ctx.rect(x + R * .06, y + R * .06, w - R * .12, h - R * .12); ctx.clip();
+    const top = y + h * .3;
+    ctx.fillStyle = a.b || '#F3E3C3'; ctx.fillRect(x, top + h * .24, w, h);
+    ctx.fillStyle = (a.c && a.c[0] && (Array.isArray(a.c[0]) ? a.c[0][0] : a.c[0])) || '#FFFFFF'; ctx.fillRect(x, top, w, h * .26);
+    (a.c || []).slice(1).forEach(c => { const col = Array.isArray(c) ? c[0] : c; for (let i = 0; i < 4; i++) blob(x + w * (.2 + rand() * .6), top + rand() * R * .12, R * .1, col); });
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(x + w * .14, y + h * .12, R * .06, h * .7);
+    return;
+  }
+  if (a.s === 'pan' || a.s === 'mug') {
+    const isPan = a.s === 'pan', body = isPan ? '#2E2E33' : (a.m || '#3A86FF');
+    if (isPan) cx -= R * .22;
+    const rad = isPan ? R : R * .82;
+    shadow(true);
+    if (isPan) rrect(cx + rad * .85, cy - rad * .1, rad * .95, rad * .2, rad * .1, body);
+    else { ctx.beginPath(); ctx.arc(cx + rad * 1.02, cy, rad * .3, 0, Math.PI * 2); ctx.lineWidth = rad * .15; ctx.strokeStyle = body; ctx.stroke(); }
+    circle(cx, cy, rad, body); shadow(false);
+    circle(cx, cy, rad * .86, isPan ? '#3B3B42' : 'rgba(0,0,0,.12)');
+    if (a.b) circle(cx, cy, rad * .84, a.b);
+    area = { c: 1, x: cx, y: cy, r: rad * .78 };
+  } else if (a.s === 'bowl') {
+    shadow(true); circle(cx, cy, R, a.m || '#FFFFFF'); shadow(false);
+    circle(cx, cy, R * .8, a.b || '#F4EFE6');
+    ctx.beginPath(); ctx.arc(cx, cy, R * .8, 0, Math.PI * 2); ctx.lineWidth = R * .05; ctx.strokeStyle = 'rgba(0,0,0,.12)'; ctx.stroke();
+    area = { c: 1, x: cx, y: cy, r: R * .74 };
+  } else if (a.s === 'tray' || a.s === 'board') {
+    const w = Math.min(W * .78, R * 2.6), h = Math.min(H * .74, R * 1.9), x = cx - w / 2, y = cy - h / 2;
+    shadow(true); rrect(x, y, w, h, R * .14, a.s === 'tray' ? (a.m || '#F7F3EE') : '#D9A066'); shadow(false);
+    if (a.s === 'tray') { rrect(x + R * .09, y + R * .09, w - R * .18, h - R * .18, R * .08, a.b || '#EFE6D8'); }
+    else {
+      ctx.strokeStyle = 'rgba(120,70,30,.2)'; ctx.lineWidth = Math.max(1, R * .012);
+      for (let i = 1; i < 7; i++) { const yy = y + h * i / 7; ctx.beginPath(); ctx.moveTo(x + R * .05, yy); ctx.bezierCurveTo(x + w * .3, yy + R * .03, x + w * .7, yy - R * .03, x + w - R * .05, yy); ctx.stroke(); }
+    }
+    area = { x: x + R * .14, y: y + R * .14, w: w - R * .28, h: h - R * .28 };
+  } else if (a.s === 'pizza') {
+    shadow(true); circle(cx, cy, R, '#E2B36A'); shadow(false);
+    circle(cx, cy, R * .86, a.b || '#D7442E');
+    for (let i = 0; i < 26; i++) { const t = rand() * Math.PI * 2; circle(cx + Math.cos(t) * R * .93, cy + Math.sin(t) * R * .93, R * .02, 'rgba(120,60,10,.35)'); }
+    area = { c: 1, x: cx, y: cy, r: R * .8 };
+  } else { // plate
+    shadow(true); circle(cx, cy, R, a.m || '#FFFFFF'); shadow(false);
+    ctx.beginPath(); ctx.arc(cx, cy, R * .78, 0, Math.PI * 2); ctx.lineWidth = R * .03; ctx.strokeStyle = 'rgba(0,0,0,.06)'; ctx.stroke();
+    if (a.b) blob(cx, cy, R * .58, a.b);
+    area = { c: 1, x: cx, y: cy, r: R * .62 };
+  }
+
+  const u = area.c ? area.r * .14 : Math.min(area.w, area.h) * .11;
+  const pt = () => {
+    if (area.c) { const t = rand() * Math.PI * 2, d = Math.sqrt(rand()) * area.r * .85; return [area.x + Math.cos(t) * d, area.y + Math.sin(t) * d]; }
+    return [area.x + area.w * (.06 + rand() * .88), area.y + area.h * (.08 + rand() * .84)];
+  };
+
+  if (a.n) {
+    const strands = [];
+    for (let i = 0; i < 20; i++) strands.push([pt(), pt(), pt(), pt()]);
+    ctx.lineCap = 'round';
+    [['rgba(0,0,0,.12)', u * .5], [a.n, u * .36]].forEach(([col, lw]) => {
+      ctx.strokeStyle = col; ctx.lineWidth = lw;
+      strands.forEach(([p0, p1, p2, p3]) => { ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]); ctx.stroke(); });
+    });
+  }
+
+  const pieces = [];
+  (a.c || []).forEach(it => {
+    const col = Array.isArray(it) ? it[0] : it, z = Array.isArray(it) ? (it[1] || 1) : (a.z || 1);
+    const n = Array.isArray(it) && it[2] ? it[2] : clamp(Math.round(7 / z), 3, 24);
+    for (let i = 0; i < n; i++) { const [x, y] = pt(); pieces.push({ x, y, z, col }); }
+  });
+  pieces.sort((p, q) => q.z - p.z);
+  ctx.shadowColor = 'rgba(0,0,0,.18)'; ctx.shadowBlur = u * .35; ctx.shadowOffsetY = u * .12;
+  pieces.forEach(p => blob(p.x, p.y, u * p.z * (.8 + rand() * .4), p.col));
+  shadow(false);
+
+  if (a.e) {
+    for (let i = 0; i < a.e; i++) {
+      const t = i / a.e * Math.PI * 2 + rand() * .4, d = area.c ? area.r * .5 : 0;
+      const x = area.c ? area.x + Math.cos(t) * d : area.x + area.w * (i + .5) / a.e, y = area.c ? area.y + Math.sin(t) * d : area.y + area.h / 2;
+      blob(x, y, u * 1.7, '#FFFDF5'); circle(x, y, u * .7, '#FFB627'); circle(x - u * .2, y - u * .2, u * .2, 'rgba(255,255,255,.6)');
+    }
+  }
+  if (a.h) {
+    ctx.fillStyle = a.h;
+    for (let i = 0; i < 28; i++) { const [x, y] = pt(); ctx.beginPath(); ctx.ellipse(x, y, u * .32, u * .16, rand() * Math.PI, 0, Math.PI * 2); ctx.fill(); }
+  }
+  const glow = ctx.createRadialGradient(W * .2, H * .1, 0, W * .2, H * .1, W * .8);
+  glow.addColorStop(0, 'rgba(255,255,255,.18)'); glow.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+}
+const artCache = new Map();
+function artURL(r, w, h) {
+  const k = key(r) + '|' + w + 'x' + h + '|' + r.title + '|' + r.category + '|' + JSON.stringify(r.art || '');
+  if (artCache.has(k)) return artCache.get(k);
+  let url = '';
+  try {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    drawDish(c.getContext('2d'), w, h, r);
+    url = c.toDataURL('image/jpeg', .86);
+  } catch (e) {}
+  artCache.set(k, url);
+  return url;
+}
+function picture(r, w, h, cls, alt) {
+  const img = el('img', { class: cls, alt: alt || '', src: artURL(r, w, h), decoding: 'async' });
+  if (r.photo) photoURL(r.photo).then(u => { if (u) img.src = u; });
+  return img;
+}
+
+// ---- Serving sizes ----
+const FR = { '½': .5, '¼': .25, '¾': .75, '⅓': 1 / 3, '⅔': 2 / 3, '⅛': .125 };
+const NUM = '(?:\\d+\\/\\d+|\\d+(?:[.,]\\d+)?(?:\\s*[½¼¾⅓⅔⅛])?|[½¼¾⅓⅔⅛])';
+const QTY_RE = new RegExp('^(' + NUM + ')(?:\\s*[–-]\\s*(' + NUM + '))?');
+function parseNum(s) {
+  s = s.trim();
+  const f = s.match(/^(\d+)\/(\d+)$/);
+  if (f) return Number(f[2]) ? Number(f[1]) / Number(f[2]) : 0;
+  const m = s.match(/^(\d+(?:[.,]\d+)?)?\s*([½¼¾⅓⅔⅛])?$/);
+  return m ? (m[1] ? parseFloat(m[1].replace(',', '.')) : 0) + (m[2] ? FR[m[2]] : 0) : 0;
+}
+function fmtNum(v, metric) {
+  if (metric) {
+    if (v >= 100) return String(Math.round(v / 10) * 10);
+    if (v >= 20) return String(Math.round(v / 5) * 5);
+    if (v >= 10) return String(Math.round(v));
+    return String(Math.round(v * 10) / 10);
+  }
+  if (v >= 10) return String(Math.round(v));
+  const opts = [[0, ''], [.125, '⅛'], [.25, '¼'], [1 / 3, '⅓'], [.5, '½'], [2 / 3, '⅔'], [.75, '¾'], [1, '']];
+  const whole = Math.floor(v), frac = v - whole;
+  let best = opts[0];
+  for (const o of opts) if (Math.abs(frac - o[0]) < Math.abs(frac - best[0])) best = o;
+  const w = whole + (best[0] === 1 ? 1 : 0), f = best[0] === 1 ? '' : best[1];
+  if (!w && !f) return '⅛';
+  return w ? (f ? w + ' ' + f : String(w)) : f;
+}
+function scaleLine(line, f) {
+  const m = line.match(QTY_RE);
+  if (!m) return { qty: '', rest: line };
+  const rest = line.slice(m[0].length);
+  if (f === 1) return { qty: m[0], rest };
+  const metric = /^\s*(g|kg|ml|cl|l|litres?|liters?)\b/i.test(rest);
+  const before = parseNum(m[2] || m[1]), after = before * f;
+  let qty = fmtNum(parseNum(m[1]) * f, metric);
+  if (m[2]) qty += '–' + fmtNum(after, metric);
+  return { qty, rest: metric ? rest : pluralize(rest, before, parseNum(qty.split('–').pop().replace(' ', '')) || after) };
+}
+// Fix the first word's plural when a count crosses 1 ("3 eggs" -> "1 egg", "1 onion" -> "2 onions").
+const NO_PLURAL = /^(tsp|tbsp|oz|lb|x|×|pinch|large|small|medium|thick|thin|ripe|very|whole|fresh|dried|frozen|red|green|yellow|white|black|baby|boneless|bone-in|cooked|raw|knob|square|head)$/i;
+function pluralize(rest, before, after) {
+  const m = rest.match(/^(\s+)([A-Za-z-]+)/);
+  if (!m || NO_PLURAL.test(m[2])) return rest;
+  let w = m[2];
+  if (before <= 1 && after > 1 && !/s$/i.test(w)) w += /(ch|sh|x)$/i.test(w) ? 'es' : 's';
+  else if (before > 1 && after <= 1 && /[^s]s$/i.test(w)) w = w.replace(/oes$/i, 'o').replace(/([^o])s$/i, '$1').replace(/^(.*o)s$/i, '$1');
+  return m[1] + w + rest.slice(m[0].length);
+}
+const baseServings = r => parseInt((r.serves.match(/\d+/) || [])[0], 10) || 0;
+const servingStep = base => base >= 12 ? Math.max(1, Math.round(base / 4)) : 1;
+const servingLabel = (r, n) => /^\d/.test(r.serves.trim()) ? n + (n === 1 ? ' serving' : ' servings') : r.serves.replace(/\d+/, n);
+
+// ---- Shuffle view ----
+function renderFilters() {
+  const pick = (k, v) => () => { filters[k] = v; saveFilters(); renderFilters(); shuffle(); };
+  $('#cat-chips').replaceChildren(
+    el('button', { class: 'chip', 'aria-pressed': String(filters.cat === 'Any'), onclick: pick('cat', 'Any') }, 'Any meal'),
+    ...CATS.map(c => el('button', { class: 'chip cat cat-' + c, 'aria-pressed': String(filters.cat === c), onclick: pick('cat', c) }, el('span', { class: 'dot' }), c)));
+  $('#more-chips').replaceChildren(
+    el('button', { class: 'chip', 'aria-pressed': String(filters.quick), onclick: () => { filters.quick = !filters.quick; saveFilters(); renderFilters(); shuffle(); } }, 'Under 30 min'),
+    ...[['all', 'Everything'], ['mine', 'Only mine'], ['classic', 'Only classics']].map(([v, label]) =>
+      el('button', { class: 'chip', 'aria-pressed': String(filters.source === v), onclick: pick('source', v) }, label)));
+  renderIdeaFilters();
+}
+
+function shuffle() {
+  const p = pool();
+  if (!p.length) { showRecipe(null); return; }
+  const choices = p.length > 1 && current ? p.filter(r => key(r) !== key(current)) : p;
+  showRecipe(choices[Math.floor(Math.random() * choices.length)]);
+  const slot = $('#card-slot');
+  if (slot.getBoundingClientRect().top < 0) slot.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+
+function showRecipe(r, keepState) {
+  const slot = $('#card-slot');
+  if (!keepState || !current || !r || key(r) !== key(current)) { checked = new Set(); servings = r ? baseServings(r) : 0; }
+  current = r;
+  currentJSON = r ? JSON.stringify(r) : '';
+  if (!r) {
+    const noneOfMine = filters.source === 'mine' && !mine().length;
+    slot.replaceChildren(el('div', { class: 'empty' },
+      el('h2', { text: noneOfMine ? 'You haven’t added any recipes yet' : 'Nothing matches these filters' }),
+      el('p', { text: noneOfMine ? 'Add one, or tap New idea and save one you like.' : 'Try another meal, or tap New idea for one that fits.' }),
+      noneOfMine
+        ? el('button', { class: 'btn primary', onclick: startAdd }, 'Add a recipe')
+        : el('button', { class: 'btn', onclick: () => { filters.cat = 'Any'; filters.quick = false; filters.source = 'all'; saveFilters(); renderFilters(); shuffle(); } }, 'Clear filters')));
+    return;
+  }
+
+  const base = baseServings(r);
+  const ingList = el('ul', { class: 'ings' });
+  const scaleNote = el('p', { class: 'scale-note', hidden: '' });
+  const out = el('output', { 'aria-live': 'polite' });
+  const minus = el('button', { 'aria-label': 'Fewer servings' }, '−');
+  const plus = el('button', { 'aria-label': 'More servings' }, '+');
+  const renderIngs = () => {
+    const f = base ? servings / base : 1;
+    ingList.replaceChildren(...r.ingredients.map((t, i) => {
+      const { qty, rest } = scaleLine(t, f);
+      const box = el('input', { type: 'checkbox', id: 'ing-' + i });
+      box.checked = checked.has(i);
+      box.addEventListener('change', () => { box.checked ? checked.add(i) : checked.delete(i); });
+      return el('li', null, el('label', { for: 'ing-' + i }, box, el('span', null, qty ? el('span', { class: 'qty', text: qty }) : null, rest)));
+    }));
+    if (base) {
+      out.textContent = servingLabel(r, servings);
+      minus.disabled = servings - servingStep(base) < servingStep(base);
+      plus.disabled = servings >= 99;
+      scaleNote.hidden = f === 1;
+      scaleNote.textContent = 'Amounts adjusted from ' + servingLabel(r, base).toLowerCase() + '. Cooking times stay the same.';
+    }
+  };
+  minus.addEventListener('click', () => { servings = Math.max(servingStep(base), servings - servingStep(base)); renderIngs(); });
+  plus.addEventListener('click', () => { servings = Math.min(99, servings + servingStep(base)); renderIngs(); });
+  renderIngs();
+
+  const badge = r.src === 'idea' ? el('span', { class: 'badge idea-badge', text: 'New idea' })
+    : el('span', { class: 'badge', text: r.src === 'classic' ? 'Classic' : 'Yours' });
+  const foot = [];
+  if ('wakeLock' in navigator) foot.push(el('button', { class: 'btn small', id: 'awake-btn', 'aria-pressed': String(wantAwake), onclick: () => setAwake(!wantAwake) }, wantAwake ? 'Screen stays on' : 'Keep screen on'));
+  if (r.src === 'mine') foot.push(el('button', { class: 'btn small', onclick: () => startEdit(r) }, 'Edit'));
+
+  slot.replaceChildren(el('article', { class: 'card' },
+    el('div', { class: 'hero' }, picture(r, 800, 500, '', r.photo ? 'Photo of ' + r.title : 'Illustration of ' + r.title), badge),
+    el('div', { class: 'card-body' },
+      el('div', { class: 'pills' },
+        el('span', { class: 'pill cat cat-' + r.category, text: r.category }),
+        r.minutes ? el('span', { class: 'pill', text: fmtTime(r.minutes) }) : null,
+        r.minutes && r.minutes <= 30 ? el('span', { class: 'pill own', text: 'Quick' }) : null),
+      el('h2', { class: 'title', text: r.title }),
+      r.src === 'idea' ? el('div', { class: 'save-idea' },
+        el('p', { text: 'Like the sound of it? Save it and it joins your shuffle.' }),
+        el('button', { class: 'btn primary', id: 'save-idea-btn', onclick: () => saveIdea(r) }, 'Save to my recipes')) : null,
+      base ? el('div', { class: 'servings' }, el('span', { class: 'lbl', text: 'Cooking for' }), el('div', { class: 'stepper' }, minus, out, plus)) : null,
+      r.ingredients.length ? el('section', { class: 'sec' }, el('h3', { text: 'Ingredients' }), ingList, scaleNote) : null,
+      r.steps.length ? el('section', { class: 'sec' }, el('h3', { text: 'Method' }), el('ol', { class: 'steps' }, r.steps.map(t => el('li', null, el('span', { text: t }))))) : null,
+      r.notes ? el('section', { class: 'sec' }, el('h3', { text: 'Notes' }), el('p', { class: 'notes', text: r.notes })) : null,
+      foot.length ? el('div', { class: 'card-foot' }, foot) : null)));
+}
+
+// ---- New idea from Claude ----
+let ideaCtl = null;
+function renderIdeaFilters() {
+  const bits = [];
+  if (filters.cat !== 'Any') bits.push(filters.cat.toLowerCase());
+  if (filters.quick) bits.push('under 30 minutes');
+  $('#idea-filters').textContent = bits.length ? 'It will match your filters: ' + bits.join(', ') + '.' : 'Pick a meal above to steer it, or leave it open.';
+}
+function openIdea() {
+  const hasKey = !!apiKey;
+  $('#idea-panel').hidden = false;
+  $('#idea-error').hidden = true;
+  $('#idea-nokey').hidden = hasKey;
+  ['#idea-input', '#idea-filters', '#idea-actions'].forEach(s => { $(s).hidden = !hasKey; });
+  renderIdeaFilters();
+  if (hasKey) $('#idea-input').focus();
+}
+
+// ---- Claude API (your own key, called straight from the phone) ----
+const API_URL = 'https://api.anthropic.com/v1/messages';
+const MODEL = 'claude-haiku-5-5';
+const PRICE_IN = 0.10 / 1e6, PRICE_OUT = 0.50 / 1e6; // Claude Haiku 5.5, USD per token
+const RECIPE_SCHEMA = {
+  type: 'object', additionalProperties: false,
+  required: ['title', 'category', 'minutes', 'serves', 'ingredients', 'steps', 'notes', 'art'],
+  properties: {
+    title: { type: 'string' },
+    category: { type: 'string', enum: CATS },
+    minutes: { type: 'integer' },
+    serves: { type: 'integer' },
+    ingredients: { type: 'array', items: { type: 'string' } },
+    steps: { type: 'array', items: { type: 'string' } },
+    notes: { type: 'string' },
+    art: {
+      type: 'object', additionalProperties: false, required: ['s', 'b', 'c', 'h'],
+      properties: { s: { type: 'string', enum: SHAPES }, b: { type: 'string' }, c: { type: 'array', items: { type: 'string' } }, h: { type: 'string' } }
+    }
+  }
+};
+async function callClaude(body, signal) {
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: 'POST', signal,
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2026-10-21',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(Object.assign({ model: MODEL }, body))
+    });
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw e;
+    throw { code: 'network' };
+  }
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw { code: 'http', status: res.status, message: (data && data.error && data.error.message) || '' };
+  if (!data) throw { code: 'garbled' };
+  if (data.stop_reason === 'refusal') throw { code: 'refused' };
+  if (data.stop_reason === 'max_tokens') throw { code: 'garbled' };
+  return data;
+}
+function friendlyError(e) {
+  if (e && e.code === 'network') return navigator.onLine === false ? 'You’re offline. New ideas need an internet connection.' : 'Couldn’t reach Claude. Check your connection and try again.';
+  if (e && e.code === 'refused') return 'Claude couldn’t make that one. Try asking for something different.';
+  if (e && e.code === 'garbled') return 'That recipe came out garbled. Try again.';
+  if (e && e.code === 'http') {
+    if (e.status === 401) return 'Your API key wasn’t accepted. Check it in Settings.';
+    if (e.status === 403) return 'This API key isn’t allowed to use Claude. Check it in the Anthropic Console.';
+    if (e.status === 429) return 'Too many requests right now. Wait a minute and try again.';
+    if (e.status === 400 && /credit|balance|billing/i.test(e.message)) return 'Your API credit has run out. Top it up at console.anthropic.com.';
+    if (e.status >= 500) return 'Claude is busy right now. Try again in a moment.';
+    return 'Claude couldn’t handle that request' + (e.message ? ': ' + e.message : '.');
+  }
+  return 'Something went wrong. Try again.';
+}
+let spend = store.get('rr.spend', { ideas: 0, usd: 0, last: 0 });
+function trackSpend(u) {
+  const usd = (u.input_tokens || 0) * PRICE_IN + (u.output_tokens || 0) * PRICE_OUT;
+  spend = { ideas: spend.ideas + 1, usd: spend.usd + usd, last: usd };
+  store.set('rr.spend', spend);
+  renderSpend();
+}
+function renderSpend() {
+  $('#spend-note').textContent = spend.ideas
+    ? spend.ideas + (spend.ideas === 1 ? ' new idea' : ' new ideas') + ' so far on this phone, about $' + spend.usd.toFixed(4) + ' in total. The last one cost about $' + spend.last.toFixed(4) + '.'
+    : 'Ideas use Claude Haiku 5.5 and cost a fraction of a cent each.';
+}
+function closeIdea() { if (ideaCtl) ideaCtl.abort(); $('#idea-panel').hidden = true; }
+function setIdeaBusy(busy) {
+  $('#idea-thinking').hidden = !busy;
+  $('#idea-go').disabled = busy;
+  $('#idea-input').disabled = busy;
+  $('#idea-close').textContent = busy ? 'Stop' : 'Close';
+}
+async function generateIdea() {
+  if (ideaCtl) return;
+  if (!apiKey) { openIdea(); return; }
+  const want = $('#idea-input').value.trim().slice(0, 200);
+  const bits = [];
+  if (filters.cat !== 'Any') bits.push('a ' + filters.cat.toLowerCase() + ' dish');
+  if (filters.quick) bits.push('ready in 30 minutes or less');
+  const prompt = 'You are helping a home cook find something new to make.\n' +
+    'Invent one appealing, realistic home-cooking recipe' + (bits.length ? ' that is ' + bits.join(' and ') : '') + '.' +
+    (want ? '\nThe cook asked for: "' + want + '".' : '') +
+    '\nIt must be different from the recipes they already have: ' + all().map(r => r.title).join('; ') + '.' +
+    '\nUse metric amounts. Begin every ingredient line with its quantity when it has one, for example "200 g rice", "2 eggs", "1 × 400 g tin chopped tomatoes". Write each method step in one or two clear sentences.' +
+    '\nReply with only a JSON object in this shape:\n' +
+    '{"title": "...", "category": "Breakfast" | "Lunch" | "Dinner" | "Dessert" | "Snack", "minutes": 30, "serves": 4, "ingredients": ["..."], "steps": ["..."], "notes": "one short tip, or an empty string", "art": {"s": "plate" | "bowl" | "pan" | "tray" | "board" | "pizza" | "jar" | "mug", "b": "#hex colour of the sauce or base, or empty string", "c": ["#hex", "#hex", "#hex"], "h": "#hex colour of herbs or garnish, or empty string"}}\n' +
+    'In "art", choose what the dish is served in and 2 to 4 colours of its most visible ingredients, for a simple illustration.';
+  ideaCtl = new AbortController();
+  $('#idea-error').hidden = true;
+  setIdeaBusy(true);
+  try {
+    const data = await callClaude({
+      max_tokens: 16000,
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: RECIPE_SCHEMA } },
+      messages: [{ role: 'user', content: prompt }]
+    }, ideaCtl.signal);
+    trackSpend(data.usage || {});
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    let out = null;
+    try { out = JSON.parse(text); } catch (e) {}
+    const r = normalize(newId('i'), out && typeof out === 'object' ? out : {}, 'idea');
+    if (!out || !out.title || !r.ingredients.length || !r.steps.length) throw { code: 'garbled' };
+    $('#idea-panel').hidden = true;
+    $('#idea-input').value = '';
+    showRecipe(r);
+    $('#card-slot').scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+  } catch (e) {
+    if (!(e && e.name === 'AbortError')) { $('#idea-error').textContent = friendlyError(e); $('#idea-error').hidden = false; }
+  } finally {
+    ideaCtl = null;
+    setIdeaBusy(false);
+  }
+}
+async function saveIdea(r) {
+  const btn = $('#save-idea-btn');
+  if (btn) btn.disabled = true;
+  try {
+    const k = await persist(bodyOf(r), null);
+    const saved = all().find(x => key(x) === k);
+    if (saved) showRecipe(saved, true);
+    toast('Saved to your recipes');
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    toast('Couldn’t save on this phone. Its storage may be full.');
+  }
+}
+
+// ---- My recipes view ----
+function renderList() {
+  const rs = mine().slice().sort((a, b) => a.title.localeCompare(b.title));
+  $('#mine-count').textContent = rs.length;
+  $('#tally').textContent = all().length + ' recipes in the mix' + (rs.length ? ', ' + rs.length + ' of them yours.' : '.');
+  $('#mine-empty').hidden = rs.length > 0;
+  $('#list').replaceChildren(...rs.map(r => el('li', { class: 'row' },
+    el('button', { class: 'row-main', onclick: () => { showRecipe(r); setView('shuffle'); window.scrollTo(0, 0); } },
+      picture(r, 120, 120, 'thumb', ''),
+      el('span', { class: 'row-text' },
+        el('span', { class: 'row-title', text: r.title }),
+        el('span', { class: 'row-meta', text: [r.category, fmtTime(r.minutes)].filter(Boolean).join(' · ') }))),
+    el('div', { class: 'row-actions' },
+      el('button', { class: 'btn small', onclick: () => startEdit(r) }, 'Edit'),
+      deleteButton(r)))));
+}
+
+function deleteButton(r) {
+  let armed = false, timer = null;
+  const b = el('button', { class: 'btn small', 'aria-label': 'Delete ' + r.title }, 'Delete');
+  b.addEventListener('click', async () => {
+    if (!armed) {
+      armed = true; b.textContent = 'Confirm'; b.classList.add('danger');
+      timer = setTimeout(() => { armed = false; b.textContent = 'Delete'; b.classList.remove('danger'); }, 3000);
+      return;
+    }
+    clearTimeout(timer); b.disabled = true;
+    try {
+      if (storageOK) await idb.del('recipes', r.id);
+      if (r.photo) await dropPhoto(r.photo);
+      myRecipes = myRecipes.filter(x => x.id !== r.id);
+      onRecipesChanged();
+      toast('Deleted “' + r.title + '”');
+    } catch (e) { b.disabled = false; toast('Couldn’t delete that recipe. Try again.'); }
+  });
+  return b;
+}
+
+function renderNote() {
+  $('#store-note').textContent = storageOK
+    ? 'Saved on this phone. Make a backup now and then from Settings.'
+    : 'This browser isn’t letting the app save, so recipes added now disappear when you close it. Private browsing can cause this.';
+  renderList();
+}
+
+// ---- Saving ----
+const stored = r => Object.assign({ id: r.id, createdAt: r.createdAt }, bodyOf(r));
+async function persist(data, prev) {
+  const id = prev ? prev.id : newId('r');
+  const rec = normalize(id, Object.assign({}, data, { createdAt: prev ? prev.createdAt || Date.now() : Date.now() }), 'mine');
+  if (storageOK) await idb.put('recipes', stored(rec));
+  myRecipes = myRecipes.filter(x => x.id !== id).concat(rec);
+  onRecipesChanged();
+  return 'mine:' + id;
+}
+
+// ---- Add / edit ----
+let photo = { blob: null, preview: '', remove: false };
+function setPhotoPreview(src) {
+  const img = $('#photo-preview');
+  img.hidden = !src; if (src) img.src = src; else img.removeAttribute('src');
+  $('#photo-remove').hidden = !src;
+  $('#photo-label').textContent = src ? 'Change photo' : 'Add a photo';
+}
+function clearPhoto() { if (photo.preview) URL.revokeObjectURL(photo.preview); photo = { blob: null, preview: '', remove: false }; $('#f-photo').value = ''; }
+async function compress(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const s = Math.min(1, 1400 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('encode')), 'image/jpeg', .84));
+  } finally { URL.revokeObjectURL(url); }
+}
+$('#f-photo').addEventListener('change', async e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  try {
+    const blob = await compress(file);
+    clearPhoto();
+    photo.blob = blob; photo.preview = URL.createObjectURL(blob);
+    setPhotoPreview(photo.preview);
+  } catch (err) { toast('That photo couldn’t be read. Try a different one.'); }
+});
+$('#photo-remove').addEventListener('click', () => { clearPhoto(); photo.remove = true; setPhotoPreview(''); });
+
+function fillCategoryOptions() { $('#f-category').replaceChildren(...CATS.map(c => el('option', { value: c }, c))); $('#f-category').value = 'Dinner'; }
+function resetForm() {
+  ['#f-title', '#f-minutes', '#f-serves', '#f-ingredients', '#f-steps', '#f-notes'].forEach(s => $(s).value = '');
+  $('#f-category').value = 'Dinner';
+  $('#form-error').hidden = true;
+  $('#save-btn').disabled = false;
+  clearPhoto(); setPhotoPreview('');
+}
+function startAdd() {
+  editing = null; resetForm();
+  $('#form-heading').textContent = 'New recipe';
+  $('#save-btn').textContent = 'Save recipe';
+  setView('add');
+}
+function startEdit(r) {
+  editing = r; resetForm();
+  $('#form-heading').textContent = 'Edit recipe';
+  $('#save-btn').textContent = 'Save changes';
+  $('#f-title').value = r.title;
+  $('#f-category').value = r.category;
+  $('#f-minutes').value = r.minutes || '';
+  $('#f-serves').value = r.serves;
+  $('#f-ingredients').value = r.ingredients.join('\n');
+  $('#f-steps').value = r.steps.join('\n');
+  $('#f-notes').value = r.notes;
+  if (r.photo) photoURL(r.photo).then(u => { if (u && editing === r) setPhotoPreview(u); });
+  setView('add');
+}
+const lines = s => s.split('\n').map(l => l.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, '').trim()).filter(Boolean);
+
+async function saveForm(e) {
+  e.preventDefault();
+  const err = $('#form-error');
+  const data = {
+    title: $('#f-title').value.trim(),
+    category: $('#f-category').value,
+    minutes: Math.max(0, parseInt($('#f-minutes').value, 10) || 0),
+    serves: $('#f-serves').value.trim(),
+    ingredients: lines($('#f-ingredients').value),
+    steps: lines($('#f-steps').value),
+    notes: $('#f-notes').value.trim(),
+    art: editing ? editing.art || null : null,
+    photo: editing ? editing.photo || '' : ''
+  };
+  if (!data.title) { err.textContent = 'Give the recipe a name.'; err.hidden = false; $('#f-title').focus(); return; }
+  if (!data.ingredients.length) { err.textContent = 'Add at least one ingredient, one per line.'; err.hidden = false; $('#f-ingredients').focus(); return; }
+  err.hidden = true;
+  $('#save-btn').disabled = true;
+
+  const oldPhoto = data.photo;
+  if (photo.remove) data.photo = '';
+  let k;
+  try {
+    if (photo.blob && storageOK) data.photo = await savePhoto(photo.blob);
+    k = await persist(data, editing);
+  } catch (ex) {
+    err.textContent = 'Couldn’t save on this phone. Its storage may be full.'; err.hidden = false;
+    $('#save-btn').disabled = false; return;
+  }
+  if (oldPhoto && oldPhoto !== data.photo) dropPhoto(oldPhoto);
+
+  toast(editing ? 'Changes saved' : 'Recipe saved');
+  editing = null; resetForm();
+  const saved = all().find(x => key(x) === k);
+  if (saved) showRecipe(saved);
+  setView('shuffle');
+  window.scrollTo(0, 0);
+}
+
+// ---- Live data ----
+function onRecipesChanged() {
+  renderList();
+  if (!current) { if (pool().length) shuffle(); return; }
+  if (current.src === 'classic' || current.src === 'idea') return;
+  const r = all().find(x => key(x) === key(current));
+  if (!r) { if (view === 'shuffle') shuffle(); else current = null; }
+  else if (JSON.stringify(r) !== currentJSON) showRecipe(r, true);
+}
+
+async function loadRecipes() {
+  try {
+    await idb.open();
+    myRecipes = (await idb.all('recipes')).map(d => normalize(d.id, d, 'mine'));
+  } catch (e) { storageOK = false; }
+  renderNote();
+  onRecipesChanged();
+  // Ask the browser not to clear this app's storage when space runs low.
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+}
+
+// ---- Backup ----
+const blobToDataURL = b => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error); fr.readAsDataURL(b); });
+async function exportBackup() {
+  const status = $('#backup-status');
+  if (!myRecipes.length) { status.textContent = 'Nothing to back up yet. Add a recipe first.'; return; }
+  status.textContent = 'Preparing your backup…';
+  const photos = {};
+  for (const r of myRecipes) {
+    if (!r.photo) continue;
+    const b = await idb.get('photos', r.photo).catch(() => null);
+    if (b) photos[r.photo] = await blobToDataURL(b);
+  }
+  const json = JSON.stringify({ app: 'recipe-roulette', version: 1, exportedAt: new Date().toISOString(), recipes: myRecipes.map(stored), photos });
+  const name = 'recipe-roulette-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  const file = new File([json], name, { type: 'application/json' });
+  const summary = myRecipes.length + (myRecipes.length === 1 ? ' recipe' : ' recipes');
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'Recipe Roulette backup' }); status.textContent = 'Backed up ' + summary + '.'; return; }
+    catch (e) { if (e && e.name === 'AbortError') { status.textContent = ''; return; } }
+  }
+  const url = URL.createObjectURL(file);
+  const a = el('a', { href: url, download: name });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  status.textContent = 'Saved a backup of ' + summary + ' as ' + name + '.';
+}
+async function importBackup(file) {
+  const status = $('#backup-status');
+  try {
+    const data = JSON.parse(await file.text());
+    if (!data || data.app !== 'recipe-roulette' || !Array.isArray(data.recipes)) throw new Error('format');
+    const photos = data.photos && typeof data.photos === 'object' ? data.photos : {};
+    let count = 0;
+    for (const d of data.recipes) {
+      if (!d || typeof d !== 'object') continue;
+      const rec = normalize(typeof d.id === 'string' && /^r[a-z0-9]{4,40}$/.test(d.id) ? d.id : newId('r'), d, 'mine');
+      if (rec.photo) {
+        const src = photos[rec.photo];
+        if (typeof src === 'string' && src.startsWith('data:image/')) {
+          const blob = await (await fetch(src)).blob();
+          if (storageOK) await idb.put('photos', blob, rec.photo);
+          photoURLs.delete(rec.photo);
+        } else rec.photo = '';
+      }
+      if (storageOK) await idb.put('recipes', stored(rec));
+      myRecipes = myRecipes.filter(x => x.id !== rec.id).concat(rec);
+      count++;
+    }
+    onRecipesChanged();
+    status.textContent = count ? 'Restored ' + count + (count === 1 ? ' recipe.' : ' recipes.') : 'That backup had no recipes in it.';
+  } catch (e) {
+    status.textContent = 'That file isn’t a Recipe Roulette backup.';
+  }
+}
+
+// ---- Settings ----
+function renderKey() {
+  $('#f-key').value = apiKey;
+  $('#key-remove').disabled = !apiKey;
+  $('#key-test').disabled = !apiKey;
+  const st = $('#key-status');
+  st.className = 'note';
+  st.textContent = apiKey ? 'Key saved on this phone (ends in …' + apiKey.slice(-4) + ').' : 'No key yet. Everything except New idea works without one.';
+}
+$('#key-show').addEventListener('click', () => {
+  const f = $('#f-key'), show = f.type === 'password';
+  f.type = show ? 'text' : 'password';
+  $('#key-show').textContent = show ? 'Hide' : 'Show';
+});
+$('#key-save').addEventListener('click', () => {
+  const v = $('#f-key').value.trim(), st = $('#key-status');
+  st.className = 'note';
+  if (!v) { st.textContent = 'Paste your key into the box first.'; return; }
+  if (!/^sk-ant-/.test(v)) { st.textContent = 'That doesn’t look like a Claude API key. Keys start with “sk-ant-”.'; return; }
+  apiKey = v; store.set('rr.apiKey', v); renderKey(); toast('Key saved');
+});
+$('#key-remove').addEventListener('click', () => { apiKey = ''; try { localStorage.removeItem('rr.apiKey'); } catch (e) {} renderKey(); toast('Key removed from this phone'); });
+$('#key-test').addEventListener('click', async () => {
+  const st = $('#key-status'), b = $('#key-test');
+  b.disabled = true; st.className = 'note'; st.textContent = 'Checking…';
+  try {
+    await callClaude({ max_tokens: 1024, output_config: { effort: 'low' }, messages: [{ role: 'user', content: 'Reply with the single word OK.' }] });
+    st.className = 'note ok'; st.textContent = 'Your key works. New ideas are ready to go.';
+  } catch (e) { st.textContent = friendlyError(e); }
+  finally { b.disabled = !apiKey; }
+});
+$('#export-btn').addEventListener('click', () => { exportBackup().catch(() => { $('#backup-status').textContent = 'Couldn’t make the backup. Try again.'; }); });
+$('#import-file').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) importBackup(f); e.target.value = ''; });
+$('#gear-btn').addEventListener('click', () => { setView(view === 'settings' ? (prevView === 'settings' ? 'shuffle' : prevView) : 'settings'); window.scrollTo(0, 0); });
+$('#idea-settings').addEventListener('click', () => { closeIdea(); setView('settings'); window.scrollTo(0, 0); $('#f-key').focus(); });
+
+// ---- Views, wake lock, toast ----
+function setView(v) {
+  if (v !== view) prevView = view;
+  view = v;
+  ['shuffle', 'mine', 'add', 'settings'].forEach(n => {
+    $('#view-' + n).hidden = n !== v;
+    const tab = $('#tab-' + n);
+    if (tab) tab.setAttribute('aria-selected', String(n === v));
+  });
+  $('#gear-btn').setAttribute('aria-pressed', String(v === 'settings'));
+  $('#dock').hidden = v !== 'shuffle';
+  if (v === 'shuffle' && !current && pool().length) shuffle();
+}
+
+async function setAwake(on) {
+  wantAwake = on;
+  if (on) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (e) { wantAwake = false; toast('This browser won’t keep the screen on.'); }
+  } else {
+    try { if (wakeLock) await wakeLock.release(); } catch (e) {}
+    wakeLock = null;
+  }
+  const b = $('#awake-btn');
+  if (b) { b.setAttribute('aria-pressed', String(wantAwake)); b.textContent = wantAwake ? 'Screen stays on' : 'Keep screen on'; }
+}
+document.addEventListener('visibilitychange', () => { if (wantAwake && !wakeLock && document.visibilityState === 'visible') setAwake(true); });
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+}
+
+const hour = new Date().getHours();
+$('#hello').textContent = hour >= 5 && hour < 11 ? 'Good morning. Fancy some breakfast?'
+  : hour < 15 ? 'Good afternoon. What’s for lunch?'
+  : hour < 22 ? 'Good evening. What’s for dinner?' : 'Late-night snack, anyone?';
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => t.dataset.view === 'add' ? startAdd() : setView(t.dataset.view)));
+$('#shuffle-btn').addEventListener('click', shuffle);
+$('#idea-btn').addEventListener('click', () => $('#idea-panel').hidden ? openIdea() : closeIdea());
+$('#idea-go').addEventListener('click', generateIdea);
+$('#idea-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); generateIdea(); } });
+$('#idea-close').addEventListener('click', () => { if (ideaCtl) ideaCtl.abort(); else closeIdea(); });
+$('#mine-add').addEventListener('click', startAdd);
+$('#mine-empty-add').addEventListener('click', startAdd);
+$('#form').addEventListener('submit', saveForm);
+$('#cancel-btn').addEventListener('click', () => { editing = null; resetForm(); setView(prevView === 'add' ? 'shuffle' : prevView); });
+
+fillCategoryOptions();
+renderFilters();
+renderKey();
+renderSpend();
+renderNote();
+shuffle();
+loadRecipes();
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
