@@ -60,4 +60,6 @@ Your recipes exist only on your phone. Every so often, go to **Settings → Save
 
 ## Updating the app
 
-Push or upload the changed files to this repository. Then open the app, close it, and open it again: the first launch downloads the update in the background, and the second launch shows it. Your recipes aren't affected.
+Push or upload the changed files to this repository, and change the `CACHE` name in `sw.js` (for example `recipe-roulette-v6` to `-v7`). The app checks for a new version every time it opens or comes back on screen, and reloads itself into it, keeping the recipe you were looking at. It waits while you're adding a recipe, in Settings, or waiting on Claude. Your recipes aren't affected.
+
+The Home Screen icon is the exception: iOS keeps the icon from when the app was added. To get a new icon, make a backup in Settings, remove the app from the Home Screen, add it again from Safari, and restore the backup.

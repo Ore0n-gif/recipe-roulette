@@ -1,13 +1,16 @@
-// Keeps Recipe Roulette working offline. Serves the cached copy first and refreshes it in the
-// background, so a new version shows up the second time you open the app after updating.
-// Calls to the Claude API are never cached.
-const CACHE = 'recipe-roulette-v5';
+// Keeps Recipe Roulette working offline and up to date. The page itself is fetched from the network
+// first (the cached copy is used when offline or the network is slow), so a new version shows up straight away.
+// Photos and icons are served from the cache and refreshed in the background. Calls to the Claude API are never cached.
+// Change CACHE on every release: that is what tells open copies of the app to reload into the new version.
+const CACHE = 'recipe-roulette-v6';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 const PHOTOS = ["shakshuka", "banana-pancakes", "french-toast", "breakfast-burritos", "blueberry-muffins", "greek-salad", "tomato-soup", "tuna-melt", "minestrone", "bean-quesadillas", "chicken-caesar", "chicken-noodle-soup", "squash-soup", "aglio-olio", "carbonara", "chickpea-curry", "beef-tacos", "mushroom-risotto", "green-curry", "chilli", "beef-broccoli", "fajitas", "pad-thai", "choc-chip-cookies", "apple-crumble", "brownies", "chocolate-mousse", "guacamole", "hummus", "tzatziki", "omelette", "falafel-wraps", "halloumi-couscous", "lemon-chicken", "glazed-salmon", "lentil-bolognese", "teriyaki", "fish-tacos", "pesto-gnocchi", "banana-bread", "lemon-posset", "roasted-chickpeas", "margherita", "bruschetta", "sausage-bean", "mug-cake", "fried-rice", "baked-cod", "pork-chops", "huevos-rancheros", "granola", "dutch-baby", "avocado-toast", "bauernfruehstueck", "quarkkeulchen", "smoothie-bowl", "breakfast-hash", "waffles", "frittata", "menemen", "kartoffelpuffer", "obatzda", "brezeln", "deviled-eggs", "nachos", "summer-rolls", "baba-ganoush", "cheese-straws", "flapjacks", "kartoffelsalat", "erbsensuppe", "linseneintopf", "flammkuchen", "senfeier", "caprese", "nicoise", "gazpacho", "french-onion-soup", "leek-potato-soup", "club-sandwich", "banh-mi", "tabbouleh", "egg-mayo-sandwich", "quiche-lorraine", "spinach-feta-pie", "poke-bowl", "cobb-salad", "lentil-salad", "croque-monsieur", "pasta-salad", "miso-soup", "kaesespaetzle", "rouladen", "gulasch", "schnitzel", "koenigsberger-klopse", "frikadellen", "bratkartoffeln", "currywurst", "geschnetzeltes", "schupfnudeln", "huehnerfrikassee", "lasagne", "spaghetti-meatballs", "tikka-masala", "dal", "stroganoff", "shepherds-pie", "fish-chips", "paella", "jambalaya", "moussaka", "katsu-curry", "kung-pao", "stuffed-peppers", "enchiladas", "burgers", "shawarma", "pasta-norma", "arrabbiata", "prawn-linguine", "chicken-satay", "mapo-tofu", "bourguignon", "tortilla-espanola", "chicken-pot-pie", "mac-cheese", "pad-kra-pao", "kaesekuchen", "apfelstrudel", "kaiserschmarrn", "rote-gruetze", "pavlova", "panna-cotta", "sticky-toffee", "milchreis", "carrot-cake", "crepes", "bratapfel", "eggs-benedict", "scrambled-eggs", "porridge", "sauerbraten", "ratatouille", "bibimbap", "zwetschgenkuchen", "tiramisu", "creme-brulee", "glasnudelsalat"].map(id => './photos/' + id + '.jpg');
 
 self.addEventListener('install', event => {
   // The recipe photos are cached too, so they show offline; if one fails it's fetched again when viewed.
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE).then(() => cache.addAll(PHOTOS).catch(() => {}))));
+  // `reload` skips the browser's own HTTP cache, so the new version never gets an old copy of a file.
+  event.waitUntil(caches.open(CACHE).then(cache =>
+    cache.addAll(CORE.map(u => new Request(u, { cache: 'reload' }))).then(() => cache.addAll(PHOTOS).catch(() => {}))));
   self.skipWaiting();
 });
 
@@ -16,10 +19,25 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+const isPage = (req, url) => req.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('/index.html');
+
+// Network first, giving up after 4 seconds; falls back to the cached page offline.
+function networkFirst(req, cache) {
+  const fresh = fetch(req.url, { cache: 'no-cache' }).then(res => {
+    if (res && res.ok) cache.put(req, res.clone());
+    return res;
+  });
+  const slow = new Promise(resolve => setTimeout(resolve, 4000));
+  return Promise.race([fresh.catch(() => null), slow]).then(res =>
+    res || cache.match(req, { ignoreSearch: true }).then(cached => cached || fresh));
+}
+
 self.addEventListener('fetch', event => {
   const req = event.request;
-  if (req.method !== 'GET' || new URL(req.url).hostname === 'api.anthropic.com') return;
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.hostname === 'api.anthropic.com') return;
   event.respondWith(caches.open(CACHE).then(async cache => {
+    if (url.origin === location.origin && isPage(req, url)) return networkFirst(req, cache);
     const cached = await cache.match(req, { ignoreSearch: true });
     const fresh = fetch(req).then(res => {
       if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone());

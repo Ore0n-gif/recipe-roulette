@@ -2124,6 +2124,7 @@ function setView(v) {
   $('#gear-btn').setAttribute('aria-pressed', String(v === 'settings'));
   $('#dock').hidden = v !== 'shuffle';
   if (v === 'shuffle' && !current && pool().length) shuffle();
+  reloadIfIdle();
 }
 
 async function setAwake(on) {
@@ -2141,6 +2142,54 @@ async function setAwake(on) {
   if (b) { b.setAttribute('aria-pressed', String(wantAwake)); b.textContent = wantAwake ? 'Screen stays on' : 'Keep screen on'; }
 }
 document.addEventListener('visibilitychange', () => { if (wantAwake && !wakeLock && document.visibilityState === 'visible') setAwake(true); });
+
+// ---- Automatic updates ----
+// The app checks for a new version whenever it comes back on screen. When one has installed, it reloads
+// into it, keeping the recipe, servings and ticks you had, but never while you're typing or waiting on Claude.
+let updateReady = false;
+function watchForUpdates() {
+  if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
+  const sw = navigator.serviceWorker;
+  let hadController = !!sw.controller;
+  sw.register('sw.js').then(reg => {
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+  }).catch(() => {});
+  sw.addEventListener('controllerchange', () => {
+    if (!hadController) { hadController = true; return; } // first install: this page is already the latest
+    updateReady = true;
+    reloadIfIdle();
+  });
+}
+
+function reloadIfIdle() {
+  if (!updateReady) return;
+  const typing = document.activeElement && document.activeElement.matches('input:not([type=checkbox]), textarea, select');
+  if (view === 'add' || view === 'settings' || typing || ideaCtl || importCtl || !$('#idea-panel').hidden) return;
+  try {
+    sessionStorage.setItem('rr.resume', JSON.stringify({
+      view, recipe: currentJSON, servings, checked: [...checked], awake: wantAwake, y: window.scrollY
+    }));
+  } catch (e) {}
+  location.reload();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') reloadIfIdle(); });
+
+function resumeAfterUpdate() {
+  let s = null;
+  try { s = JSON.parse(sessionStorage.getItem('rr.resume')); sessionStorage.removeItem('rr.resume'); } catch (e) {}
+  if (!s || !s.recipe) return false;
+  const saved = JSON.parse(s.recipe);
+  showRecipe(all().find(r => key(r) === key(saved)) || saved);
+  servings = s.servings || servings;
+  checked = new Set(s.checked || []);
+  showRecipe(current, true);
+  if (current && current.src === 'mine') currentJSON = ''; // redraw with its photo once your recipes have loaded
+  setView(s.view === 'mine' ? 'mine' : 'shuffle');
+  requestAnimationFrame(() => window.scrollTo(0, s.y || 0));
+  if (s.awake && 'wakeLock' in navigator) setAwake(true);
+  toast('App updated');
+  return true;
+}
 
 let toastTimer = null;
 function toast(msg) {
@@ -2171,9 +2220,9 @@ renderFilters();
 renderKey();
 renderSpend();
 renderNote();
-shuffle();
+if (!resumeAfterUpdate()) shuffle();
 loadRecipes();
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+watchForUpdates();
 </script>
 </body>
 </html>
