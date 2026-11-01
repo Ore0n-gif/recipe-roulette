@@ -44,6 +44,16 @@ The Home Screen app keeps its own storage, separate from Safari tabs. Add your r
 
 Each idea costs a fraction of a cent. The Settings screen shows a running total.
 
+## Importing recipes
+
+Tap **+ Add** (or **Mine → Import**), open **Import from a link, text or screenshots**, then:
+
+- paste a link to a recipe page or a YouTube video whose description has the recipe,
+- paste recipe text (a video caption, a message, anything), or
+- add up to 5 screenshots or photos of a recipe.
+
+Claude reads it and fills in the form for you to check before saving. The link is kept in Notes. Imports use your API key and cost about the same as a New idea, a bit more for long pages. Sites behind a login or paywall, and most TikTok or Instagram links, can't be read; paste the caption text or add screenshots instead.
+
 ## Backups
 
 Your recipes exist only on your phone. Every so often, go to **Settings → Save backup → Save to Files** (iCloud Drive is a good place for it). To move to a new phone, use **Restore backup** and pick that file.

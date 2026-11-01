@@ -200,6 +200,20 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
   outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft);
 }
 textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
+/* Import */
+.import { display: block; }
+.import summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.import summary::-webkit-details-marker { display: none; }
+.import summary::after { content: '+'; font-size: 1.5rem; font-weight: 600; line-height: 1; color: var(--primary); }
+.import[open] summary::after { content: '−'; }
+.import summary h3 { margin: 0; }
+.import-body { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.import-body textarea { min-height: 90px; }
+.shots { display: flex; flex-wrap: wrap; gap: 10px; }
+.shots:empty { display: none; }
+.shot { position: relative; }
+.shot img { width: 68px; height: 92px; object-fit: cover; border-radius: 10px; display: block; border: 1px solid var(--line); }
+.shot button { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg); font-size: .95rem; line-height: 1; display: grid; place-items: center; }
 .photo-pick { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .photo-pick img { width: 96px; height: 72px; object-fit: cover; border-radius: 12px; }
 .error { color: var(--danger); font-weight: 700; margin: 0; }
@@ -286,7 +300,10 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
   <section id="view-mine" class="view" hidden>
     <div class="sectionhead">
       <h2>My recipes</h2>
-      <button class="btn primary small" id="mine-add">+ Add recipe</button>
+      <div class="row-btns">
+        <button class="btn small" id="mine-import">Import</button>
+        <button class="btn primary small" id="mine-add">+ Add recipe</button>
+      </div>
     </div>
     <p class="note" id="store-note">Saved on this phone. Make a backup now and then from Settings.</p>
     <ul class="list" id="list"></ul>
@@ -301,7 +318,7 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
     <div class="sectionhead"><h2>Settings</h2></div>
     <div class="panel">
       <h3>Claude API key</h3>
-      <p class="note">Powers the New idea button. The key stays on this phone and is sent only to Anthropic. Create one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>, and set a monthly spending limit there.</p>
+      <p class="note">Powers New idea and Import. The key stays on this phone and is sent only to Anthropic. Create one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>, and set a monthly spending limit there.</p>
       <div class="keyrow">
         <input type="password" id="f-key" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" aria-label="Claude API key">
         <button type="button" class="btn small" id="key-show">Show</button>
@@ -328,6 +345,31 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
 
   <section id="view-add" class="view" hidden>
     <div class="sectionhead"><h2 id="form-heading">New recipe</h2></div>
+    <details class="panel import" id="import-panel">
+      <summary><h3>Import from a link, text or screenshots</h3></summary>
+      <div class="import-body">
+        <p class="note">Paste a link to a recipe page or a YouTube video, paste the recipe text, or add screenshots or photos of a recipe. Claude fills in the form below for you to check before saving.</p>
+        <div class="sec" id="import-nokey" hidden>
+          <p class="note">Importing uses your Claude API key. Add it once in Settings.</p>
+          <div class="row-btns"><button type="button" class="btn primary" id="import-settings">Open settings</button></div>
+        </div>
+        <div class="import-body" id="import-main" style="margin-top:0">
+          <textarea id="import-text" maxlength="20000" aria-label="Recipe link or text" placeholder="https://… or the recipe text"></textarea>
+          <div class="shots" id="import-shots"></div>
+          <div class="row-btns">
+            <button type="button" class="btn" id="import-paste">Paste</button>
+            <label class="btn" for="import-files">Add screenshots</label>
+            <input type="file" id="import-files" accept="image/*" multiple class="visually-hidden">
+          </div>
+          <div class="thinking" id="import-thinking" hidden><span class="spinner" aria-hidden="true"></span><span>Reading the recipe. This can take up to a minute.</span></div>
+          <p class="error" id="import-error" role="alert" hidden></p>
+          <div class="row-btns">
+            <button type="button" class="btn primary" id="import-go">Import recipe</button>
+            <button type="button" class="btn" id="import-stop" hidden>Stop</button>
+          </div>
+        </div>
+      </div>
+    </details>
     <form id="form" novalidate>
       <div class="field">
         <label for="f-title">Name</label>
@@ -1101,7 +1143,7 @@ async function callClaude(body, signal) {
   return data;
 }
 function friendlyError(e) {
-  if (e && e.code === 'network') return navigator.onLine === false ? 'You’re offline. New ideas need an internet connection.' : 'Couldn’t reach Claude. Check your connection and try again.';
+  if (e && e.code === 'network') return navigator.onLine === false ? 'You’re offline. This needs an internet connection.' : 'Couldn’t reach Claude. Check your connection and try again.';
   if (e && e.code === 'refused') return 'Claude couldn’t make that one. Try asking for something different.';
   if (e && e.code === 'garbled') return 'That recipe came out garbled. Try again.';
   if (e && e.code === 'http') {
@@ -1123,8 +1165,8 @@ function trackSpend(u) {
 }
 function renderSpend() {
   $('#spend-note').textContent = spend.ideas
-    ? spend.ideas + (spend.ideas === 1 ? ' new idea' : ' new ideas') + ' so far on this phone, about $' + spend.usd.toFixed(4) + ' in total. The last one cost about $' + spend.last.toFixed(4) + '.'
-    : 'Ideas use Claude Haiku 5.5 and cost a fraction of a cent each.';
+    ? spend.ideas + (spend.ideas === 1 ? ' request' : ' requests') + ' to Claude so far on this phone (new ideas and imports), about $' + spend.usd.toFixed(4) + ' in total. The last one cost about $' + spend.last.toFixed(4) + '.'
+    : 'New ideas and imports use Claude Haiku 5.5 and cost a fraction of a cent each.';
 }
 function closeIdea() { if (ideaCtl) ideaCtl.abort(); $('#idea-panel').hidden = true; }
 function setIdeaBusy(busy) {
@@ -1283,15 +1325,20 @@ function resetForm() {
   $('#form-error').hidden = true;
   $('#save-btn').disabled = false;
   clearPhoto(); setPhotoPreview('');
+  importedArt = null;
 }
 function startAdd() {
   editing = null; resetForm();
+  $('#import-panel').hidden = false;
+  $('#import-panel').open = false;
+  $('#import-error').hidden = true;
   $('#form-heading').textContent = 'New recipe';
   $('#save-btn').textContent = 'Save recipe';
   setView('add');
 }
 function startEdit(r) {
   editing = r; resetForm();
+  $('#import-panel').hidden = true;
   $('#form-heading').textContent = 'Edit recipe';
   $('#save-btn').textContent = 'Save changes';
   $('#f-title').value = r.title;
@@ -1317,7 +1364,7 @@ async function saveForm(e) {
     ingredients: lines($('#f-ingredients').value),
     steps: lines($('#f-steps').value),
     notes: $('#f-notes').value.trim(),
-    art: editing ? editing.art || null : null,
+    art: editing ? editing.art || null : importedArt,
     photo: editing ? editing.photo || '' : ''
   };
   if (!data.title) { err.textContent = 'Give the recipe a name.'; err.hidden = false; $('#f-title').focus(); return; }
@@ -1344,6 +1391,162 @@ async function saveForm(e) {
   setView('shuffle');
   window.scrollTo(0, 0);
 }
+
+// ---- Import from a link, pasted text or screenshots (Claude reads it and fills the form) ----
+let importedArt = null, importCtl = null, shots = [];
+const MAX_SHOTS = 5;
+const LINK_RE = /https?:\/\/[^\s<>"'“”]+/i;
+const IMPORT_SCHEMA = {
+  type: 'object', additionalProperties: false, required: ['found', 'problem', 'recipe'],
+  properties: { found: { type: 'boolean' }, problem: { type: 'string' }, recipe: RECIPE_SCHEMA }
+};
+const FETCH_ERRORS = {
+  url_not_accessible: 'That page couldn’t be opened. Some sites block apps from reading them. Copy the recipe text and paste it here instead.',
+  url_not_allowed: 'That site doesn’t allow apps to read it. Copy the recipe text and paste it here instead.',
+  unsupported_content_type: 'That link isn’t a page Claude can read. Try the recipe page itself, or paste the text.',
+  content_too_large: 'That page is too big to read. Copy just the recipe and paste it here instead.',
+  url_too_long: 'That link is too long. Try a shorter link to the recipe page.'
+};
+
+function openImport() {
+  const hasKey = !!apiKey;
+  $('#import-nokey').hidden = hasKey;
+  $('#import-main').hidden = !hasKey;
+}
+function startImport() {
+  startAdd();
+  $('#import-panel').open = true;
+  openImport();
+  if (apiKey) $('#import-text').focus();
+}
+function renderShots() {
+  $('#import-shots').replaceChildren(...shots.map((s, i) => el('div', { class: 'shot' },
+    el('img', { src: s.url, alt: 'Screenshot ' + (i + 1) }),
+    el('button', { type: 'button', 'aria-label': 'Remove screenshot ' + (i + 1), onclick: () => { URL.revokeObjectURL(s.url); shots.splice(i, 1); renderShots(); } }, '×'))));
+  $('#import-files').disabled = shots.length >= MAX_SHOTS;
+}
+function clearImport() {
+  shots.forEach(s => URL.revokeObjectURL(s.url)); shots = [];
+  $('#import-text').value = ''; $('#import-files').value = '';
+  $('#import-error').hidden = true;
+  renderShots();
+}
+function setImportBusy(busy) {
+  $('#import-thinking').hidden = !busy;
+  $('#import-go').disabled = busy;
+  $('#import-stop').hidden = !busy;
+  $('#import-text').disabled = busy;
+}
+const toBase64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
+
+// The answer is JSON; with web fetch it can arrive after other text, so try the last block first, then the outermost braces.
+function parseLoose(blocks) {
+  const texts = blocks.filter(b => b.type === 'text').map(b => b.text);
+  for (const t of [texts[texts.length - 1] || '', texts.join('')]) {
+    try { return JSON.parse(t); } catch (e) {}
+    const a = t.indexOf('{'), b = t.lastIndexOf('}');
+    if (a >= 0 && b > a) try { return JSON.parse(t.slice(a, b + 1)); } catch (e) {}
+  }
+  return null;
+}
+
+async function importRecipe() {
+  if (importCtl) return;
+  if (!apiKey) { openImport(); return; }
+  const text = $('#import-text').value.trim();
+  const link = (text.match(LINK_RE) || [''])[0].replace(/[).,;]+$/, '');
+  const extra = link ? text.replace(link, '').trim() : text;
+  const err = $('#import-error');
+  if (!text && !shots.length) { err.textContent = 'Paste a link or the recipe text, or add a screenshot.'; err.hidden = false; return; }
+
+  const prompt = 'Turn the recipe below into a clean recipe for a home cook’s recipe box.' +
+    (link ? '\nUse the web_fetch tool to open this page and read the recipe on it: ' + link + '\nIf it is a video page, the recipe is usually written in the description.' : '') +
+    (extra.length > 2 ? '\nHere is the text they pasted:\n"""\n' + extra + '\n"""' : '') +
+    (shots.length ? '\nThe attached ' + (shots.length > 1 ? shots.length + ' images show' : 'image shows') + ' the recipe.' : '') +
+    '\nKeep the recipe’s own amounts and units. Begin every ingredient line with its quantity when it has one, for example "200 g rice", "2 eggs", "1 cup milk". Skip section headings.' +
+    '\nWrite the method as clear steps in your own words, one or two sentences each, without numbering. Put a useful tip in "notes" if there is one, otherwise an empty string.' +
+    '\n"minutes" is the total time and "serves" the number of servings; estimate them if the recipe doesn’t say. Pick the category that fits best.' +
+    '\nIn "art", choose what the dish is served in and 2 to 4 hex colours of its most visible ingredients, for a simple illustration.' +
+    '\nIf there is no recipe to read (the page didn’t load, the video has no written recipe, or the image isn’t a recipe), set "found" to false, explain why in "problem" in one short sentence, and fill "recipe" with placeholders. Otherwise set "found" to true and "problem" to an empty string.';
+  const shape = '\nReply with only a JSON object in this shape: {"found": true, "problem": "", "recipe": {"title": "...", "category": "Breakfast" | "Lunch" | "Dinner" | "Dessert" | "Snack", "minutes": 30, "serves": 4, "ingredients": ["..."], "steps": ["..."], "notes": "", "art": {"s": "plate" | "bowl" | "pan" | "tray" | "board" | "pizza" | "jar" | "mug", "b": "#hex", "c": ["#hex", "#hex"], "h": "#hex"}}}';
+
+  importCtl = new AbortController();
+  err.hidden = true;
+  setImportBusy(true);
+  try {
+    const content = [];
+    for (const s of shots) content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: await toBase64(s.blob) } });
+    const ask = async structured => {
+      const messages = [{ role: 'user', content: content.concat({ type: 'text', text: prompt + (structured ? '' : shape) }) }];
+      const body = { max_tokens: 16000, output_config: { effort: 'low' }, messages };
+      if (structured) body.output_config.format = { type: 'json_schema', schema: IMPORT_SCHEMA };
+      if (link) body.tools = [{ type: 'web_fetch_20250910', name: 'web_fetch', max_uses: 3, max_content_tokens: 40000 }];
+      const blocks = [];
+      for (let turn = 0; turn < 4; turn++) {
+        const data = await callClaude(body, importCtl.signal);
+        trackSpend(data.usage || {});
+        blocks.push(...(data.content || []));
+        if (data.stop_reason !== 'pause_turn') break;
+        messages.push({ role: 'assistant', content: data.content }); // a long fetch paused: hand it back to carry on
+      }
+      return blocks;
+    };
+    let blocks;
+    try { blocks = await ask(true); }
+    catch (e) {
+      // In case the API won't combine web fetch with a fixed answer format, ask for plain JSON instead.
+      if (!(link && e && e.code === 'http' && e.status === 400 && !/credit|balance|billing/i.test(e.message))) throw e;
+      blocks = await ask(false);
+    }
+    const out = parseLoose(blocks);
+    const fetchErr = blocks.find(b => b.type === 'web_fetch_tool_result' && b.content && b.content.type === 'web_fetch_tool_result_error');
+    if (!out || out.found === false || !out.recipe) {
+      const code = fetchErr && fetchErr.content.error_code;
+      throw { code: 'import', message: FETCH_ERRORS[code] || (out && out.problem ? 'Claude couldn’t find a recipe there: ' + out.problem : 'Claude couldn’t find a recipe there. Try pasting the recipe text instead.') };
+    }
+    const r = normalize('x', out.recipe, 'mine');
+    if (!r.ingredients.length && !r.steps.length) throw { code: 'garbled' };
+    $('#f-title').value = r.title;
+    $('#f-category').value = r.category;
+    $('#f-minutes').value = r.minutes || '';
+    $('#f-serves').value = r.serves;
+    $('#f-ingredients').value = r.ingredients.join('\n');
+    $('#f-steps').value = r.steps.join('\n');
+    $('#f-notes').value = [r.notes, link ? 'Source: ' + link : ''].filter(Boolean).join('\n\n');
+    importedArt = r.art;
+    clearImport();
+    $('#import-panel').open = false;
+    $('#form').scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+    toast('Imported. Check it over, then tap Save.');
+  } catch (e) {
+    if (!(e && e.name === 'AbortError')) { err.textContent = e && e.code === 'import' ? e.message : friendlyError(e); err.hidden = false; }
+  } finally {
+    importCtl = null;
+    setImportBusy(false);
+  }
+}
+
+$('#import-panel').addEventListener('toggle', () => { if ($('#import-panel').open) openImport(); });
+$('#import-go').addEventListener('click', importRecipe);
+$('#import-stop').addEventListener('click', () => { if (importCtl) importCtl.abort(); });
+$('#import-settings').addEventListener('click', () => { setView('settings'); window.scrollTo(0, 0); $('#f-key').focus(); });
+$('#import-paste').addEventListener('click', async () => {
+  try {
+    const t = await navigator.clipboard.readText();
+    if (t) { $('#import-text').value = t.slice(0, 20000); $('#import-error').hidden = true; }
+  } catch (e) { $('#import-text').focus(); toast('Tap and hold in the box, then choose Paste.'); }
+});
+$('#import-files').addEventListener('change', async e => {
+  const files = Array.from(e.target.files || []).slice(0, MAX_SHOTS - shots.length);
+  e.target.value = '';
+  for (const f of files) {
+    try { const blob = await compress(f); shots.push({ blob, url: URL.createObjectURL(blob) }); }
+    catch (ex) { toast('One of those images couldn’t be read.'); }
+  }
+  renderShots();
+  if (files.length) $('#import-error').hidden = true;
+});
+$('#mine-import').addEventListener('click', startImport);
 
 // ---- Live data ----
 function onRecipesChanged() {
