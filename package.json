@@ -1,0 +1,27 @@
+{
+  "name": "recipe-roulette",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Recipe Roulette as an iPhone and Android app (Capacitor). The web version is the same index.html, served by GitHub Pages.",
+  "scripts": {
+    "build": "node scripts/build-www.mjs",
+    "sync": "npm run build && cap sync",
+    "assets": "capacitor-assets generate --ios --android --iconBackgroundColor #FFE600 --iconBackgroundColorDark #FFE600 --splashBackgroundColor #FFE600 --splashBackgroundColorDark #FFE600",
+    "android": "npm run sync && cap open android",
+    "ios": "npm run sync && cap open ios"
+  },
+  "dependencies": {
+    "@capacitor-community/keep-awake": "^8.0.1",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app-launcher": "^8.0.1",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/ios": "^8.6.0",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0"
+  }
+}
