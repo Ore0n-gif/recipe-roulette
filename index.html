@@ -101,12 +101,22 @@ button { cursor: pointer; }
 
 /* Filters */
 .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.pick { position: relative; color: var(--ink); min-width: 0; }
-/* 16px keeps iPhones from zooming in when a menu opens. */
-.pick select { -webkit-appearance: none; appearance: none; padding: 9px 26px 9px 10px; font-size: 16px; font-weight: 700; text-overflow: ellipsis; color: inherit; }
-.pick::after { content: ''; position: absolute; right: 11px; top: 50%; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-70%) rotate(45deg); pointer-events: none; }
-.pick.on { color: var(--on-yellow); }
-.pick.on select { background: var(--yellow); border-color: var(--ink); }
+.pick { position: relative; min-width: 0; }
+.pick-btn, .pick-list button {
+  width: 100%; display: flex; align-items: center; gap: 8px; border-radius: 0; color: var(--ink); text-align: left;
+  font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+}
+.pick-btn { gap: 6px; padding: 10px 9px 10px 10px; border: var(--rule); background: var(--surface); }
+.pick-btn .val { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick-btn::after { content: ''; flex: none; width: 7px; height: 7px; margin: 0 2px 3px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+.pick-btn[aria-expanded="true"]::after { margin: 3px 2px 0; transform: rotate(225deg); }
+.pick.on .pick-btn { background: var(--yellow); color: var(--on-yellow); border-color: var(--ink); }
+.pick-list { position: absolute; z-index: 6; top: calc(100% + 4px); left: 0; min-width: 100%; margin: 0; padding: 0; list-style: none; background: var(--surface); border: var(--rule); box-shadow: 5px 5px 0 var(--hard); }
+.pick:nth-child(even) .pick-list { left: auto; right: 0; }
+.pick-list button { padding: 12px; border: 0; border-top: 1px solid var(--line); background: none; white-space: nowrap; }
+.pick-list li:first-child button { border-top: 0; }
+.pick-list button[aria-selected="true"] { background: var(--yellow); color: var(--on-yellow); }
+.pick .dot { width: 10px; height: 10px; flex: none; background: var(--pastel); border: 1.5px solid currentColor; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { border: var(--rule); background: var(--surface); padding: 6px 11px; border-radius: 0; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink); display: inline-flex; align-items: center; gap: 7px; }
 .chip .dot { width: 10px; height: 10px; flex: none; background: var(--pastel); border: 1.5px solid currentColor; }
@@ -2105,16 +2115,38 @@ const servingLabel = (r, n) => /^\d/.test(r.serves.trim()) ? (n === 1 ? tr('1 se
   : /^Makes \d+$/.test(r.serves.trim()) ? tr('Makes {n}', { n }) : r.serves.replace(/\d+/, n);
 
 // ---- Shuffle view ----
+// The open filter menu closes on a tap anywhere else or Escape.
+let closePick = null;
+document.addEventListener('click', e => { if (closePick && !e.target.closest('.pick')) closePick(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && closePick) closePick(); });
 function renderFilters() {
   // One dropdown per filter; the first option is the default, and a dropdown set to anything else turns yellow.
+  // Options are [value, label, meal] where a meal gets its colour dot.
   const menu = (label, value, options, set) => {
-    const s = el('select', { 'aria-label': label, onchange: () => { set(s.value); saveFilters(); renderFilters(); shuffle(); } },
-      options.map(([v, text]) => el('option', { value: v }, text)));
-    s.value = value;
-    return el('div', { class: 'pick' + (value === options[0][0] ? '' : ' on') }, s);
+    const cur = options.find(o => o[0] === value) || options[0];
+    const dot = c => c ? el('span', { class: 'dot cat-' + c }) : null;
+    const btn = el('button', { class: 'pick-btn', 'aria-haspopup': 'listbox', 'aria-expanded': 'false', 'aria-label': label + ': ' + cur[1] },
+      dot(cur[2]), el('span', { class: 'val', text: cur[1] }));
+    const items = options.map(([v, text, c]) => el('button', { role: 'option', 'aria-selected': String(v === value), onclick: () => {
+      close();
+      if (v !== value) { set(v); saveFilters(); renderFilters(); shuffle(); }
+    } }, dot(c), text));
+    const list = el('ul', { class: 'pick-list', role: 'listbox', 'aria-label': label, hidden: '', onkeydown: e => {
+      const i = items.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus(); }
+    } }, items.map(b => el('li', null, b)));
+    const close = () => { list.hidden = true; btn.setAttribute('aria-expanded', 'false'); if (closePick === close) closePick = null; };
+    btn.addEventListener('click', () => {
+      const opening = list.hidden;
+      if (closePick) closePick();
+      if (!opening) return;
+      list.hidden = false; btn.setAttribute('aria-expanded', 'true'); closePick = close;
+      items[options.indexOf(cur)].focus();
+    });
+    return el('div', { class: 'pick' + (value === options[0][0] ? '' : ' on') }, btn, list);
   };
   $('#filters').replaceChildren(
-    menu(tr('Meal'), filters.cat, [['Any', tr('Any meal')], ...CATS.map(c => [c, tr(c)])], v => { filters.cat = v; }),
+    menu(tr('Meal'), filters.cat, [['Any', tr('Any meal')], ...CATS.map(c => [c, tr(c), c])], v => { filters.cat = v; }),
     menu(tr('Diet'), filters.diet, [['any', tr('Any diet')], ['vegetarian', tr('Vegetarian')], ['vegan', tr('Vegan')]], v => { filters.diet = v; }),
     menu(tr('Time'), filters.quick ? 'quick' : 'any', [['any', tr('Any time')], ['quick', tr('Under 30 min')]], v => { filters.quick = v === 'quick'; }),
     menu(tr('Recipes'), filters.source, [['all', tr('All recipes')], ['favs', tr('Favourites')], ['mine', tr('Only mine')], ['classic', tr('Only classics')]], v => { filters.source = v; }));
