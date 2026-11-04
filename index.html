@@ -67,6 +67,8 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
 }
+/* Covers the phone's status bar so the page doesn't scroll underneath the clock. */
+body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 4; }
 .app, .view { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; width: 100%; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
@@ -2677,13 +2679,37 @@ function ring() {
 }
 function stopRinging() { clearInterval(ringing); ringing = null; }
 
-// In the store app, timers also go off as notifications when the phone is locked.
-function scheduleAlarm(t) {
+// In the store app, timers also go off as notifications when the phone is locked. Since Android 12, ringing on
+// time needs "Alarms & reminders". The first time, the app explains why before Android's settings page opens.
+// If the answer is no, the notification still comes, though Android may deliver it late.
+async function scheduleAlarm(t) {
   const LN = NATIVE && NATIVE.LocalNotifications;
   if (!LN) return;
-  LN.requestPermissions().then(() => LN.schedule({ notifications: [{
-    id: t.nid, title: tr('Timer done'), body: (cook ? cook.r.title + ' · ' : '') + t.label, schedule: { at: new Date(t.endsAt), allowWhileIdle: true }
-  }] })).catch(() => {});
+  try {
+    if ((await LN.requestPermissions()).display !== 'granted') return;
+    const setting = await LN.checkExactNotificationSetting().catch(() => null);
+    let exact = !setting || setting.exact_alarm === 'granted';
+    if (!exact && !store.get('rr.askedExact', false)) { store.set('rr.askedExact', true); exact = await askExactAlarms(LN); }
+    if (!cook || !cook.timers.includes(t) || !t.running || t.done) return;
+    await LN.schedule({ notifications: [{
+      id: t.nid, title: tr('Timer done'), body: (cook ? cook.r.title + ' · ' : '') + t.label,
+      schedule: { at: new Date(t.endsAt), allowWhileIdle: true }, isExactNotification: exact
+    }] });
+  } catch (e) {}
+}
+function askExactAlarms(LN) {
+  return new Promise(resolve => {
+    let done = false;
+    const finish = ok => { if (done) return; done = true; resolve(ok); close(); };
+    const close = openSheet(tr('Ring on time?'),
+      el('p', { text: tr('To ring on time while you’re in another app or the phone is locked, timers need Android’s “Alarms & reminders” permission. Without it, the reminder can arrive late.') }),
+      el('button', { class: 'btn primary', onclick: async () => {
+        const s = await LN.changeExactNotificationSetting().catch(() => null);
+        finish(!!s && s.exact_alarm === 'granted');
+      } }, tr('Open settings')),
+      el('button', { class: 'btn', onclick: () => finish(false) }, tr('Not now')));
+    close.onclose = () => finish(false);
+  });
 }
 function cancelAlarm(t) {
   const LN = NATIVE && NATIVE.LocalNotifications;
@@ -2769,7 +2795,11 @@ function renderWeek() {
 // A sheet that slides up from the bottom; returns a function that closes it.
 function openSheet(title, ...content) {
   const onKey = e => { if (e.key === 'Escape') close(); };
-  const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+  const close = () => {
+    if (!back.isConnected) return;
+    back.remove(); document.removeEventListener('keydown', onKey);
+    if (close.onclose) close.onclose();
+  };
   const back = el('div', { class: 'sheet-back', onclick: e => { if (e.target === back) close(); } },
     el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
       el('div', { class: 'sheet-head' }, el('h2', { text: title }), el('button', { class: 'btn small', onclick: () => close() }, tr('Close'))),

@@ -3,7 +3,7 @@
 // Icons are served from the cache and refreshed in the background. Calls to the Claude API are never cached.
 // Change CACHE on every release: that is what tells open copies of the app to reload into the new version.
 // Photos never change, so they live in their own cache that survives releases and only new ones are downloaded.
-const CACHE = 'recipe-roulette-v10';
+const CACHE = 'recipe-roulette-v11';
 const PHOTO_CACHE = 'recipe-roulette-photos';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png',
   './i18n/de.json', './i18n/es.json', './i18n/fr.json', './i18n/it.json'];
