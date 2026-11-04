@@ -100,7 +100,13 @@ button { cursor: pointer; }
 .count { font-size: .72rem; font-weight: 700; background: var(--yellow); color: var(--on-yellow); padding: 0 6px; font-variant-numeric: tabular-nums; }
 
 /* Filters */
-.filters { display: flex; flex-direction: column; gap: 8px; }
+.filters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pick { position: relative; color: var(--ink); min-width: 0; }
+/* 16px keeps iPhones from zooming in when a menu opens. */
+.pick select { -webkit-appearance: none; appearance: none; padding: 9px 26px 9px 10px; font-size: 16px; font-weight: 700; text-overflow: ellipsis; color: inherit; }
+.pick::after { content: ''; position: absolute; right: 11px; top: 50%; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-70%) rotate(45deg); pointer-events: none; }
+.pick.on { color: var(--on-yellow); }
+.pick.on select { background: var(--yellow); border-color: var(--ink); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { border: var(--rule); background: var(--surface); padding: 6px 11px; border-radius: 0; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink); display: inline-flex; align-items: center; gap: 7px; }
 .chip .dot { width: 10px; height: 10px; flex: none; background: var(--pastel); border: 1.5px solid currentColor; }
@@ -336,10 +342,7 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
   </header>
 
   <section id="view-shuffle" class="view">
-    <div class="filters">
-      <div class="chips" id="cat-chips" aria-label="Meal"></div>
-      <div class="chips" id="more-chips" aria-label="More filters"></div>
-    </div>
+    <div class="filters" id="filters"></div>
     <div class="idea" id="idea-panel" hidden>
       <label for="idea-input">Get a brand-new recipe idea</label>
       <div class="sec" id="idea-nokey" hidden>
@@ -2103,16 +2106,18 @@ const servingLabel = (r, n) => /^\d/.test(r.serves.trim()) ? (n === 1 ? tr('1 se
 
 // ---- Shuffle view ----
 function renderFilters() {
-  const pick = (k, v) => () => { filters[k] = v; saveFilters(); renderFilters(); shuffle(); };
-  $('#cat-chips').replaceChildren(
-    el('button', { class: 'chip', 'aria-pressed': String(filters.cat === 'Any'), onclick: pick('cat', 'Any') }, tr('Any meal')),
-    ...CATS.map(c => el('button', { class: 'chip cat cat-' + c, 'aria-pressed': String(filters.cat === c), onclick: pick('cat', c) }, el('span', { class: 'dot' }), tr(c))));
-  $('#more-chips').replaceChildren(
-    el('button', { class: 'chip', 'aria-pressed': String(filters.quick), onclick: () => { filters.quick = !filters.quick; saveFilters(); renderFilters(); shuffle(); } }, tr('Under 30 min')),
-    ...[['vegetarian', tr('Vegetarian')], ['vegan', tr('Vegan')]].map(([v, label]) =>
-      el('button', { class: 'chip', 'aria-pressed': String(filters.diet === v), onclick: pick('diet', filters.diet === v ? 'any' : v) }, label)),
-    ...[['all', tr('Everything')], ['favs', tr('Favourites')], ['mine', tr('Only mine')], ['classic', tr('Only classics')]].map(([v, label]) =>
-      el('button', { class: 'chip', 'aria-pressed': String(filters.source === v), onclick: pick('source', v) }, label)));
+  // One dropdown per filter; the first option is the default, and a dropdown set to anything else turns yellow.
+  const menu = (label, value, options, set) => {
+    const s = el('select', { 'aria-label': label, onchange: () => { set(s.value); saveFilters(); renderFilters(); shuffle(); } },
+      options.map(([v, text]) => el('option', { value: v }, text)));
+    s.value = value;
+    return el('div', { class: 'pick' + (value === options[0][0] ? '' : ' on') }, s);
+  };
+  $('#filters').replaceChildren(
+    menu(tr('Meal'), filters.cat, [['Any', tr('Any meal')], ...CATS.map(c => [c, tr(c)])], v => { filters.cat = v; }),
+    menu(tr('Diet'), filters.diet, [['any', tr('Any diet')], ['vegetarian', tr('Vegetarian')], ['vegan', tr('Vegan')]], v => { filters.diet = v; }),
+    menu(tr('Time'), filters.quick ? 'quick' : 'any', [['any', tr('Any time')], ['quick', tr('Under 30 min')]], v => { filters.quick = v === 'quick'; }),
+    menu(tr('Recipes'), filters.source, [['all', tr('All recipes')], ['favs', tr('Favourites')], ['mine', tr('Only mine')], ['classic', tr('Only classics')]], v => { filters.source = v; }));
   renderIdeaFilters();
 }
 
