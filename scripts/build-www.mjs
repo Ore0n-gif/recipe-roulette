@@ -7,4 +7,5 @@ rmSync('www', { recursive: true, force: true });
 mkdirSync('www');
 for (const f of FILES) cpSync(f, 'www/' + f);
 cpSync('photos', 'www/photos', { recursive: true });
+cpSync('i18n', 'www/i18n', { recursive: true });
 console.log('Copied the app into www/');

@@ -6,6 +6,8 @@ It runs as a home-screen web app, and is set up to be built as an iPhone and And
 
 What it does: shuffle 253 built-in recipes (filter by meal, vegetarian, vegan, under 30 minutes, favourites), go **Back** to a recipe you shuffled past, scale servings, **Start cooking** for one step at a time with timers, plan recipes on any day in **Week**, keep **favourites**, add or import your own recipes, and **Share** any recipe as a link.
 
+Languages: English, German, Spanish, French and Italian, including all built-in recipes. The app follows the phone's language, or pick one under **Settings → Language**. New idea and Import answer in the chosen language; recipes you add yourself stay as you wrote them.
+
 Live at https://ore0n-gif.github.io/recipe-roulette/
 
 ## Files
@@ -14,6 +16,7 @@ Live at https://ore0n-gif.github.io/recipe-roulette/
 - `sw.js`: keeps the app working offline
 - `manifest.webmanifest`, `icon-180.png`, `icon-192.png`, `icon-512.png`: the home-screen name and icon
 - `photos/`: photos of the built-in recipes
+- `i18n/`: the German, Spanish, French and Italian translations (interface and recipes); English is built into `index.html`
 - `privacy.html`: the privacy policy (needed for the app stores)
 - `package.json`, `capacitor.config.json`, `scripts/`, `assets/`, `android/`, `ios/`: the iPhone and Android app projects ([PUBLISHING.md](PUBLISHING.md))
 

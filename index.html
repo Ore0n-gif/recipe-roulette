@@ -291,13 +291,13 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
 .dock-inner { max-width: 560px; margin: 0 auto; display: flex; pointer-events: auto; border: 2px solid #0A0A0A; box-shadow: 5px 5px 0 var(--hard); margin-right: 5px; }
 @media (min-width: 600px) { .dock-inner { margin-right: auto; } }
 .shuffle {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;
+  flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 10px;
   border: 0; border-radius: 0; background: #0A0A0A; color: #FFE600;
   padding: 15px; font-weight: 700; font-size: 1.1rem; text-transform: uppercase; letter-spacing: .04em;
 }
 .idea-btn {
-  flex: none; display: flex; align-items: center; gap: 7px; border: 0; border-left: 2px solid #0A0A0A; border-radius: 0; background: #FFE600; color: #0A0A0A;
-  padding: 15px 16px; font-weight: 700; font-size: .9rem; text-transform: uppercase; letter-spacing: .04em;
+  flex: 0 1 auto; min-width: 0; max-width: 42%; display: flex; align-items: center; gap: 7px; border: 0; border-left: 2px solid #0A0A0A; border-radius: 0; background: #FFE600; color: #0A0A0A;
+  padding: 15px 16px; text-align: left; line-height: 1.15; font-weight: 700; font-size: .9rem; text-transform: uppercase; letter-spacing: .04em;
 }
 .back-btn { flex: none; width: 56px; display: grid; place-items: center; border: 0; border-right: 2px solid #0A0A0A; border-radius: 0; background: #F4F4F0; color: #0A0A0A; }
 .back-btn:disabled { color: rgb(10 10 10 / .3); cursor: default; }
@@ -400,6 +400,11 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.45; }
 
   <section id="view-settings" class="view" hidden>
     <div class="sectionhead"><h2>Settings</h2></div>
+    <div class="panel">
+      <h3>Language</h3>
+      <select id="f-lang" aria-label="Language"></select>
+      <p class="note">Recipes you added yourself stay in the language you wrote them in.</p>
+    </div>
     <div class="panel">
       <h3>Claude API key</h3>
       <p class="note">Powers New idea and Import. The key stays on this phone and is sent only to Anthropic. Create one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>, and set a monthly spending limit there.</p>
@@ -1545,6 +1550,47 @@ function normalize(id, d, src) {
 }
 const bodyOf = r => ({ title: r.title, category: r.category, minutes: r.minutes, serves: r.serves, ingredients: r.ingredients, steps: r.steps, notes: r.notes, diet: r.diet || '', art: r.art || null, photo: r.photo || '' });
 
+// ---- Languages ----
+// English is built in; the other languages (interface text and the built-in recipes) load from i18n/<code>.json.
+// Interface strings are looked up by their English text, so anything not translated simply stays English.
+const LANGS = { en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', it: 'Italiano' };
+const LOCALES = { en: 'en-GB', de: 'de-DE', es: 'es-ES', fr: 'fr-FR', it: 'it-IT' };
+const LANG_IN_ENGLISH = { de: 'German', es: 'Spanish', fr: 'French', it: 'Italian' };
+const langSetting = LANGS[store.get('rr.lang', 'auto')] ? store.get('rr.lang', 'auto') : 'auto';
+let lang = langSetting !== 'auto' ? langSetting
+  : (navigator.languages || [navigator.language || 'en']).map(l => String(l).slice(0, 2).toLowerCase()).find(l => LANGS[l]) || 'en';
+let UI = {}, RECIPE_TEXT = {};
+function tr(text, vars) {
+  const out = UI[text] || text;
+  return vars ? out.replace(/\{(\w+)\}/g, (m, k) => k in vars ? vars[k] : m) : out;
+}
+// German keeps its capitals when a phrase lands mid-sentence.
+const lc = s => lang === 'de' ? s : s.toLowerCase();
+async function loadLanguage() {
+  if (lang !== 'en') {
+    try {
+      const d = await (await fetch('i18n/' + lang + '.json')).json();
+      UI = d.ui || {}; RECIPE_TEXT = d.recipes || {};
+    } catch (e) { lang = 'en'; } // e.g. offline before the file was ever downloaded
+  }
+  document.documentElement.lang = lang;
+}
+function translatePage() {
+  if (lang === 'en') return;
+  const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT,
+    { acceptNode: n => n.parentElement.closest('script, style') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+    const text = n.nodeValue.trim();
+    if (text && UI[text]) n.nodeValue = n.nodeValue.replace(text, UI[text]);
+  }
+  for (const e of document.querySelectorAll('[placeholder], [aria-label], [alt]'))
+    for (const a of ['placeholder', 'aria-label', 'alt']) { const v = e.getAttribute(a); if (v && UI[v]) e.setAttribute(a, UI[v]); }
+}
+const langLine = () => lang === 'en' ? '' :
+  '\nWrite the whole recipe (title, ingredients, steps and notes) in ' + LANG_IN_ENGLISH[lang] + ', translating it if the source is in another language, ' +
+  'with metric units and the usual local abbreviations. Keep the JSON keys and the "category" and "diet" values in English. ' +
+  'In ingredient lines, when a word changes between singular and plural with the amount, write both forms as {singular|plural}, for example "2 {Zwiebel|Zwiebeln}".';
+
 // ---- State ----
 // Set when running inside the iPhone/Android app (Capacitor) rather than in a browser.
 const NATIVE = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() ? window.Capacitor.Plugins : null;
@@ -1563,7 +1609,8 @@ const saveFavs = () => store.set('rr.favs', [...favs]);
 let current = null, currentJSON = '', view = 'shuffle', prevView = 'shuffle', editing = null;
 let servings = 0, checked = new Set();
 let wantAwake = false, wakeLock = null;
-const classics = CLASSICS.map(r => normalize(r.id, Object.assign({ diet: DIET[r.id] }, r), 'classic'));
+let classics = [];
+const buildClassics = () => { classics = CLASSICS.map(r => normalize(r.id, Object.assign({ diet: DIET[r.id] }, r, RECIPE_TEXT[r.id] || {}), 'classic')); };
 
 const key = r => r.src + ':' + r.id;
 const mine = () => myRecipes;
@@ -1998,7 +2045,7 @@ function fmtNum(v, metric) {
     if (v >= 100) return String(Math.round(v / 10) * 10);
     if (v >= 20) return String(Math.round(v / 5) * 5);
     if (v >= 10) return String(Math.round(v));
-    return String(Math.round(v * 10) / 10);
+    return String(Math.round(v * 10) / 10).replace('.', lang === 'en' ? '.' : ',');
   }
   if (v >= 10) return String(Math.round(v));
   const opts = [[0, ''], [.125, '⅛'], [.25, '¼'], [1 / 3, '⅓'], [.5, '½'], [2 / 3, '⅔'], [.75, '¾'], [1, '']];
@@ -2009,16 +2056,20 @@ function fmtNum(v, metric) {
   if (!w && !f) return '⅛';
   return w ? (f ? w + ' ' + f : String(w)) : f;
 }
+// Translated recipes write words that change with the amount as {singular|plural}.
+const forms = (s, n) => s.replace(/\{([^{}|]*)\|([^{}|]*)\}/g, (_, one, many) => n > 1 ? many : one);
 function scaleLine(line, f) {
   const m = line.match(QTY_RE);
-  if (!m) return { qty: '', rest: line };
+  if (!m) return { qty: '', rest: forms(line, 1) };
   const rest = line.slice(m[0].length);
-  if (f === 1) return { qty: m[0], rest };
+  if (f === 1) return { qty: lang === 'en' ? m[0] : m[0].replace(/(\d)\.(\d)/g, '$1,$2'), rest: forms(rest, parseNum(m[2] || m[1])) };
   const metric = /^\s*(g|kg|ml|cl|l|litres?|liters?)\b/i.test(rest);
   const before = parseNum(m[2] || m[1]), after = before * f;
   let qty = fmtNum(parseNum(m[1]) * f, metric);
   if (m[2]) qty += '–' + fmtNum(after, metric);
   const shown = parseNum(qty.split('–').pop().replace(' ', '')) || after;
+  if (/[{|}]/.test(rest)) return { qty, rest: forms(rest, shown) };
+  if (lang !== 'en') return { qty, rest };
   if (metric) return { qty, rest: rest.replace(/^(\s*)(litre|liter)s?\b/i, (_, sp, w) => sp + w + (shown > 1 ? 's' : '')) };
   return { qty, rest: pluralize(rest, before, shown) };
 }
@@ -2045,19 +2096,20 @@ function pluralize(rest, before, after) {
 }
 const baseServings = r => parseInt((r.serves.match(/\d+/) || [])[0], 10) || 0;
 const servingStep = base => base >= 12 ? Math.max(1, Math.round(base / 4)) : 1;
-const servingLabel = (r, n) => /^\d/.test(r.serves.trim()) ? n + (n === 1 ? ' serving' : ' servings') : r.serves.replace(/\d+/, n);
+const servingLabel = (r, n) => /^\d/.test(r.serves.trim()) ? (n === 1 ? tr('1 serving') : tr('{n} servings', { n }))
+  : /^Makes \d+$/.test(r.serves.trim()) ? tr('Makes {n}', { n }) : r.serves.replace(/\d+/, n);
 
 // ---- Shuffle view ----
 function renderFilters() {
   const pick = (k, v) => () => { filters[k] = v; saveFilters(); renderFilters(); shuffle(); };
   $('#cat-chips').replaceChildren(
-    el('button', { class: 'chip', 'aria-pressed': String(filters.cat === 'Any'), onclick: pick('cat', 'Any') }, 'Any meal'),
-    ...CATS.map(c => el('button', { class: 'chip cat cat-' + c, 'aria-pressed': String(filters.cat === c), onclick: pick('cat', c) }, el('span', { class: 'dot' }), c)));
+    el('button', { class: 'chip', 'aria-pressed': String(filters.cat === 'Any'), onclick: pick('cat', 'Any') }, tr('Any meal')),
+    ...CATS.map(c => el('button', { class: 'chip cat cat-' + c, 'aria-pressed': String(filters.cat === c), onclick: pick('cat', c) }, el('span', { class: 'dot' }), tr(c))));
   $('#more-chips').replaceChildren(
-    el('button', { class: 'chip', 'aria-pressed': String(filters.quick), onclick: () => { filters.quick = !filters.quick; saveFilters(); renderFilters(); shuffle(); } }, 'Under 30 min'),
-    ...[['vegetarian', 'Vegetarian'], ['vegan', 'Vegan']].map(([v, label]) =>
+    el('button', { class: 'chip', 'aria-pressed': String(filters.quick), onclick: () => { filters.quick = !filters.quick; saveFilters(); renderFilters(); shuffle(); } }, tr('Under 30 min')),
+    ...[['vegetarian', tr('Vegetarian')], ['vegan', tr('Vegan')]].map(([v, label]) =>
       el('button', { class: 'chip', 'aria-pressed': String(filters.diet === v), onclick: pick('diet', filters.diet === v ? 'any' : v) }, label)),
-    ...[['all', 'Everything'], ['favs', 'Favourites'], ['mine', 'Only mine'], ['classic', 'Only classics']].map(([v, label]) =>
+    ...[['all', tr('Everything')], ['favs', tr('Favourites')], ['mine', tr('Only mine')], ['classic', tr('Only classics')]].map(([v, label]) =>
       el('button', { class: 'chip', 'aria-pressed': String(filters.source === v), onclick: pick('source', v) }, label)));
   renderIdeaFilters();
 }
@@ -2108,11 +2160,11 @@ function showRecipe(r, keepState) {
     const noneOfMine = filters.source === 'mine' && !mine().length;
     const noFavs = filters.source === 'favs' && !all().some(x => favs.has(key(x)));
     slot.replaceChildren(el('div', { class: 'empty' },
-      el('h2', { text: noneOfMine ? 'You haven’t added any recipes yet' : noFavs ? 'No favourites yet' : 'Nothing matches these filters' }),
-      el('p', { text: noneOfMine ? 'Add one, or tap New idea and save one you like.' : noFavs ? 'Tap the heart on a recipe you love and it shows up here.' : 'Try another meal, or tap New idea for one that fits.' }),
+      el('h2', { text: noneOfMine ? tr('You haven’t added any recipes yet') : noFavs ? tr('No favourites yet') : tr('Nothing matches these filters') }),
+      el('p', { text: noneOfMine ? tr('Add one, or tap New idea and save one you like.') : noFavs ? tr('Tap the heart on a recipe you love and it shows up here.') : tr('Try another meal, or tap New idea for one that fits.') }),
       noneOfMine
-        ? el('button', { class: 'btn primary', onclick: startAdd }, 'Add a recipe')
-        : el('button', { class: 'btn', onclick: () => { filters.cat = 'Any'; filters.quick = false; filters.diet = 'any'; filters.source = 'all'; saveFilters(); renderFilters(); shuffle(); } }, 'Clear filters')));
+        ? el('button', { class: 'btn primary', onclick: startAdd }, tr('Add a recipe'))
+        : el('button', { class: 'btn', onclick: () => { filters.cat = 'Any'; filters.quick = false; filters.diet = 'any'; filters.source = 'all'; saveFilters(); renderFilters(); shuffle(); } }, tr('Clear filters'))));
     return;
   }
 
@@ -2120,8 +2172,8 @@ function showRecipe(r, keepState) {
   const ingList = el('ul', { class: 'ings' });
   const scaleNote = el('p', { class: 'scale-note', hidden: '' });
   const out = el('output', { 'aria-live': 'polite' });
-  const minus = el('button', { 'aria-label': 'Fewer servings' }, '−');
-  const plus = el('button', { 'aria-label': 'More servings' }, '+');
+  const minus = el('button', { 'aria-label': tr('Fewer servings') }, '−');
+  const plus = el('button', { 'aria-label': tr('More servings') }, '+');
   const renderIngs = () => {
     const f = base ? servings / base : 1;
     ingList.replaceChildren(...r.ingredients.map((t, i) => {
@@ -2136,7 +2188,7 @@ function showRecipe(r, keepState) {
       minus.disabled = servings - servingStep(base) < servingStep(base);
       plus.disabled = servings >= 99;
       scaleNote.hidden = f === 1;
-      scaleNote.textContent = 'Amounts adjusted from ' + servingLabel(r, base).toLowerCase() + '. Cooking times stay the same.';
+      scaleNote.textContent = tr('Amounts adjusted from {what}. Cooking times stay the same.', { what: lc(servingLabel(r, base)) });
     }
   };
   minus.addEventListener('click', () => { servings = Math.max(servingStep(base), servings - servingStep(base)); renderIngs(); });
@@ -2144,38 +2196,38 @@ function showRecipe(r, keepState) {
   renderIngs();
 
   const unsaved = r.src === 'idea' || r.src === 'shared';
-  const badge = unsaved ? el('span', { class: 'badge idea-badge', text: r.src === 'idea' ? 'New idea' : 'Shared with you' })
-    : el('span', { class: 'badge', text: r.src === 'classic' ? 'Classic' : 'Yours' });
-  const foot = [el('button', { class: 'btn small', onclick: () => addToWeek(r) }, 'Add to week')];
-  if (canStayAwake()) foot.push(el('button', { class: 'btn small', id: 'awake-btn', 'aria-pressed': String(wantAwake), onclick: () => setAwake(!wantAwake) }, wantAwake ? 'Screen stays on' : 'Keep screen on'));
-  foot.push(el('button', { class: 'btn small', onclick: () => shareRecipe(r) }, 'Share'));
-  if (r.src === 'mine') foot.push(el('button', { class: 'btn small', onclick: () => startEdit(r) }, 'Edit'));
+  const badge = unsaved ? el('span', { class: 'badge idea-badge', text: r.src === 'idea' ? tr('New idea') : tr('Shared with you') })
+    : el('span', { class: 'badge', text: r.src === 'classic' ? tr('Classic') : tr('Yours') });
+  const foot = [el('button', { class: 'btn small', onclick: () => addToWeek(r) }, tr('Add to week'))];
+  if (canStayAwake()) foot.push(el('button', { class: 'btn small', id: 'awake-btn', 'aria-pressed': String(wantAwake), onclick: () => setAwake(!wantAwake) }, wantAwake ? tr('Screen stays on') : tr('Keep screen on')));
+  foot.push(el('button', { class: 'btn small', onclick: () => shareRecipe(r) }, tr('Share')));
+  if (r.src === 'mine') foot.push(el('button', { class: 'btn small', onclick: () => startEdit(r) }, tr('Edit')));
 
   const stock = !r.photo && stockPhoto(r);
-  const heroImg = picture(r, 800, 500, '', (r.photo || stock ? 'Photo of ' : 'Illustration of ') + r.title);
+  const heroImg = picture(r, 800, 500, '', tr(r.photo || stock ? 'Photo of {title}' : 'Illustration of {title}', { title: r.title }));
   const cr = stock && PHOTO_CREDITS[r.id];
-  const credit = cr ? el('a', { class: 'credit', href: cr[2], target: '_blank', rel: 'noopener', text: 'Photo: ' + (cr[0] === 'Unknown' ? 'Wikimedia Commons' : cr[0]) + ' · ' + cr[1] }) : null;
-  if (credit) heroImg.addEventListener('fallback', () => { credit.remove(); heroImg.alt = 'Illustration of ' + r.title; });
+  const credit = cr ? el('a', { class: 'credit', href: cr[2], target: '_blank', rel: 'noopener', text: tr('Photo: {who}', { who: cr[0] === 'Unknown' ? 'Wikimedia Commons' : cr[0] }) + ' · ' + cr[1] }) : null;
+  if (credit) heroImg.addEventListener('fallback', () => { credit.remove(); heroImg.alt = tr('Illustration of {title}', { title: r.title }); });
 
   slot.replaceChildren(el('article', { class: 'card' },
     el('div', { class: 'hero' }, heroImg, badge, credit,
-      el('button', { class: 'fav', 'aria-pressed': String(favs.has(key(r))), 'aria-label': 'Favourite', onclick: () => toggleFav(r) }, icon(HEART))),
+      el('button', { class: 'fav', 'aria-pressed': String(favs.has(key(r))), 'aria-label': tr('Favourite'), onclick: () => toggleFav(r) }, icon(HEART))),
     el('div', { class: 'card-body' },
       el('div', { class: 'pills' },
-        r.src === 'classic' ? el('span', { class: 'pill', text: 'No. ' + String(classics.indexOf(r) + 1).padStart(3, '0') }) : null,
-        el('span', { class: 'pill cat cat-' + r.category, text: r.category }),
+        r.src === 'classic' ? el('span', { class: 'pill', text: tr('No. {n}', { n: String(classics.indexOf(r) + 1).padStart(3, '0') }) }) : null,
+        el('span', { class: 'pill cat cat-' + r.category, text: tr(r.category) }),
         r.minutes ? el('span', { class: 'pill', text: fmtTime(r.minutes) }) : null,
-        r.minutes && r.minutes <= 30 ? el('span', { class: 'pill own', text: 'Quick' }) : null,
-        r.diet ? el('span', { class: 'pill veg', text: r.diet === 'vegan' ? 'Vegan' : 'Vegetarian' }) : null),
+        r.minutes && r.minutes <= 30 ? el('span', { class: 'pill own', text: tr('Quick') }) : null,
+        r.diet ? el('span', { class: 'pill veg', text: r.diet === 'vegan' ? tr('Vegan') : tr('Vegetarian') }) : null),
       el('h2', { class: 'title', text: r.title }),
       unsaved ? el('div', { class: 'save-idea' },
-        el('p', { text: r.src === 'idea' ? 'Like the sound of it? Save it and it joins your shuffle.' : 'A friend sent you this. Save it and it joins your shuffle.' }),
-        el('button', { class: 'btn primary', id: 'save-idea-btn', onclick: () => saveIdea(r) }, 'Save to my recipes')) : null,
-      base ? el('div', { class: 'servings' }, el('span', { class: 'lbl', text: 'Cooking for' }), el('div', { class: 'stepper' }, minus, out, plus)) : null,
-      r.ingredients.length ? el('section', { class: 'sec' }, el('h3', { text: 'Ingredients' }), ingList, scaleNote) : null,
-      r.steps.length ? el('section', { class: 'sec' }, el('h3', { text: 'Method' }), el('ol', { class: 'steps' }, r.steps.map(t => el('li', null, el('span', { text: t })))),
-        el('button', { class: 'btn primary cook-start', onclick: () => startCooking(r) }, 'Start cooking →')) : null,
-      r.notes ? el('section', { class: 'sec' }, el('h3', { text: 'Notes' }), el('p', { class: 'notes', text: r.notes })) : null,
+        el('p', { text: r.src === 'idea' ? tr('Like the sound of it? Save it and it joins your shuffle.') : tr('A friend sent you this. Save it and it joins your shuffle.') }),
+        el('button', { class: 'btn primary', id: 'save-idea-btn', onclick: () => saveIdea(r) }, tr('Save to my recipes'))) : null,
+      base ? el('div', { class: 'servings' }, el('span', { class: 'lbl', text: tr('Cooking for') }), el('div', { class: 'stepper' }, minus, out, plus)) : null,
+      r.ingredients.length ? el('section', { class: 'sec' }, el('h3', { text: tr('Ingredients') }), ingList, scaleNote) : null,
+      r.steps.length ? el('section', { class: 'sec' }, el('h3', { text: tr('Method') }), el('ol', { class: 'steps' }, r.steps.map(t => el('li', null, el('span', { text: t })))),
+        el('button', { class: 'btn primary cook-start', onclick: () => startCooking(r) }, tr('Start cooking →'))) : null,
+      r.notes ? el('section', { class: 'sec' }, el('h3', { text: tr('Notes') }), el('p', { class: 'notes', text: r.notes })) : null,
       foot.length ? el('div', { class: 'card-foot' }, foot) : null)));
 }
 
@@ -2183,10 +2235,10 @@ function showRecipe(r, keepState) {
 let ideaCtl = null;
 function renderIdeaFilters() {
   const bits = [];
-  if (filters.cat !== 'Any') bits.push(filters.cat.toLowerCase());
-  if (filters.quick) bits.push('under 30 minutes');
-  if (filters.diet !== 'any') bits.push(filters.diet);
-  $('#idea-filters').textContent = bits.length ? 'It will match your filters: ' + bits.join(', ') + '.' : 'Pick a meal above to steer it, or leave it open.';
+  if (filters.cat !== 'Any') bits.push(lc(tr(filters.cat)));
+  if (filters.quick) bits.push(tr('under 30 minutes'));
+  if (filters.diet !== 'any') bits.push(lc(tr(filters.diet === 'vegan' ? 'Vegan' : 'Vegetarian')));
+  $('#idea-filters').textContent = bits.length ? tr('It will match your filters: {list}.', { list: bits.join(', ') }) : tr('Pick a meal above to steer it, or leave it open.');
 }
 function openIdea() {
   const hasKey = !!apiKey;
@@ -2215,7 +2267,7 @@ function recipeFromText(t) {
 }
 function ideaFromChat() {
   const d = recipeFromText($('#idea-answer').value);
-  if (!d) { $('#idea-error').textContent = 'That doesn’t look like Claude’s recipe. Copy Claude’s whole reply and paste it again.'; $('#idea-error').hidden = false; return; }
+  if (!d) { $('#idea-error').textContent = tr('That doesn’t look like Claude’s recipe. Copy Claude’s whole reply and paste it again.'); $('#idea-error').hidden = false; return; }
   $('#idea-error').hidden = true;
   $('#idea-answer').value = '';
   $('#idea-paste').hidden = true;
@@ -2273,18 +2325,18 @@ async function callClaude(body, signal) {
   return data;
 }
 function friendlyError(e) {
-  if (e && e.code === 'network') return navigator.onLine === false ? 'You’re offline. This needs an internet connection.' : 'Couldn’t reach Claude. Check your connection and try again.';
-  if (e && e.code === 'refused') return 'Claude couldn’t make that one. Try asking for something different.';
-  if (e && e.code === 'garbled') return 'That recipe came out garbled. Try again.';
+  if (e && e.code === 'network') return navigator.onLine === false ? tr('You’re offline. This needs an internet connection.') : tr('Couldn’t reach Claude. Check your connection and try again.');
+  if (e && e.code === 'refused') return tr('Claude couldn’t make that one. Try asking for something different.');
+  if (e && e.code === 'garbled') return tr('That recipe came out garbled. Try again.');
   if (e && e.code === 'http') {
-    if (e.status === 401) return 'Your API key wasn’t accepted. Check it in Settings.';
-    if (e.status === 403) return 'This API key isn’t allowed to use Claude. Check it in the Anthropic Console.';
-    if (e.status === 429) return 'Too many requests right now. Wait a minute and try again.';
-    if (e.status === 400 && /credit|balance|billing/i.test(e.message)) return 'Your API credit has run out. Top it up at console.anthropic.com.';
-    if (e.status >= 500) return 'Claude is busy right now. Try again in a moment.';
+    if (e.status === 401) return tr('Your API key wasn’t accepted. Check it in Settings.');
+    if (e.status === 403) return tr('This API key isn’t allowed to use Claude. Check it in the Anthropic Console.');
+    if (e.status === 429) return tr('Too many requests right now. Wait a minute and try again.');
+    if (e.status === 400 && /credit|balance|billing/i.test(e.message)) return tr('Your API credit has run out. Top it up at console.anthropic.com.');
+    if (e.status >= 500) return tr('Claude is busy right now. Try again in a moment.');
     return 'Claude couldn’t handle that request' + (e.message ? ': ' + e.message : '.');
   }
-  return 'Something went wrong. Try again.';
+  return tr('Something went wrong. Try again.');
 }
 let spend = store.get('rr.spend', { ideas: 0, usd: 0, last: 0 });
 function trackSpend(u) {
@@ -2293,17 +2345,18 @@ function trackSpend(u) {
   store.set('rr.spend', spend);
   renderSpend();
 }
+const money = x => lang === 'en' ? x.toFixed(4) : x.toFixed(4).replace('.', ',');
 function renderSpend() {
   $('#spend-note').textContent = spend.ideas
-    ? spend.ideas + (spend.ideas === 1 ? ' request' : ' requests') + ' to Claude so far on this phone (new ideas and imports), about $' + spend.usd.toFixed(4) + ' in total. The last one cost about $' + spend.last.toFixed(4) + '.'
-    : 'New ideas and imports use Claude Haiku 5.5 and cost a fraction of a cent each.';
+    ? tr(spend.ideas === 1 ? '1 request to Claude so far on this phone (new ideas and imports), about ${usd} in total. The last one cost about ${last}.' : '{n} requests to Claude so far on this phone (new ideas and imports), about ${usd} in total. The last one cost about ${last}.', { n: spend.ideas, usd: money(spend.usd), last: money(spend.last) })
+    : tr('New ideas and imports use Claude Haiku 5.5 and cost a fraction of a cent each.');
 }
 function closeIdea() { if (ideaCtl) ideaCtl.abort(); $('#idea-panel').hidden = true; }
 function setIdeaBusy(busy) {
   $('#idea-thinking').hidden = !busy;
   $('#idea-go').disabled = busy;
   $('#idea-input').disabled = busy;
-  $('#idea-close').textContent = busy ? 'Stop' : 'Close';
+  $('#idea-close').textContent = busy ? tr('Stop') : tr('Close');
 }
 // The request for a new recipe; `have` lists titles to avoid.
 function ideaPrompt(want, have) {
@@ -2318,7 +2371,7 @@ function ideaPrompt(want, have) {
     '\nUse metric amounts. Begin every ingredient line with its quantity when it has one, for example "200 g rice", "2 eggs", "1 × 400 g tin chopped tomatoes". Write each method step in one or two clear sentences.' +
     '\nReply with only a JSON object in this shape:\n' +
     '{"title": "...", "category": "Breakfast" | "Lunch" | "Dinner" | "Dessert" | "Snack", "minutes": 30, "serves": 4, "ingredients": ["..."], "steps": ["..."], "notes": "one short tip, or an empty string", "diet": "" | "vegetarian" | "vegan", "art": {"s": "plate" | "bowl" | "pan" | "tray" | "board" | "pizza" | "jar" | "mug", "b": "#hex colour of the sauce or base, or empty string", "c": ["#hex", "#hex", "#hex"], "h": "#hex colour of herbs or garnish, or empty string"}}\n' +
-    'In "art", choose what the dish is served in and 2 to 4 colours of its most visible ingredients, for a simple illustration.';
+    'In "art", choose what the dish is served in and 2 to 4 colours of its most visible ingredients, for a simple illustration.' + langLine();
 }
 async function generateIdea() {
   if (ideaCtl) return;
@@ -2369,25 +2422,25 @@ async function ensureSaved(r) {
     if (saved && current && key(current) === key(r)) replaceCurrent(saved);
     return saved;
   } catch (e) {
-    toast('Couldn’t save on this phone. Its storage may be full.');
+    toast(tr('Couldn’t save on this phone. Its storage may be full.'));
     return null;
   }
 }
 async function saveIdea(r) {
   const btn = $('#save-idea-btn');
   if (btn) btn.disabled = true;
-  if (await ensureSaved(r)) toast('Saved to your recipes');
+  if (await ensureSaved(r)) toast(tr('Saved to your recipes'));
   else if (btn) btn.disabled = false;
 }
 async function toggleFav(r) {
   if (favs.has(key(r))) {
     favs.delete(key(r));
-    toast('Removed from favourites');
+    toast(tr('Removed from favourites'));
   } else {
     const kept = await ensureSaved(r);
     if (!kept) return;
     favs.add(key(kept));
-    toast('Added to favourites');
+    toast(tr('Added to favourites'));
   }
   saveFavs();
   if (current) showRecipe(current, true);
@@ -2412,14 +2465,14 @@ async function unpackRecipe(t) {
 async function shareRecipe(r) {
   let url;
   try { url = PUBLIC_URL + (r.src === 'classic' ? '#c=' + r.id : '#r=' + await packRecipe(r)); }
-  catch (e) { toast('Couldn’t make a link for this recipe.'); return; }
-  const data = { title: r.title, text: r.title + ' – a recipe from Recipe Roulette', url };
+  catch (e) { toast(tr('Couldn’t make a link for this recipe.')); return; }
+  const data = { title: r.title, text: r.title + ' – ' + tr('a recipe from Recipe Roulette'), url };
   try {
     if (NATIVE && NATIVE.Share) await NATIVE.Share.share(data);
     else if (navigator.share) await navigator.share(data);
-    else { await navigator.clipboard.writeText(url); toast('Link copied. Send it to a friend.'); }
+    else { await navigator.clipboard.writeText(url); toast(tr('Link copied. Send it to a friend.')); }
   } catch (e) {
-    if (!(e && e.name === 'AbortError') && !/cancel/i.test(e && e.message)) toast('Couldn’t share. Try again.');
+    if (!(e && e.name === 'AbortError') && !/cancel/i.test(e && e.message)) toast(tr('Couldn’t share. Try again.'));
   }
 }
 // Opens a recipe link a friend sent (…#c=classic-id or …#r=packed recipe). Returns true if there was one.
@@ -2437,19 +2490,23 @@ function openSharedLink() {
     const r = normalize(newId('s'), d, 'shared');
     if (!r.ingredients.length && !r.steps.length) throw new Error('empty');
     showRecipe(r);
-  }).catch(() => { toast('That recipe link looks broken.'); if (!current) shuffle(); });
+  }).catch(() => { toast(tr('That recipe link looks broken.')); if (!current) shuffle(); });
   return true;
 }
 
 // ---- Cooking mode: one step at a time, with timers for the times each step mentions ----
-const UNIT_SECS = { hour: 3600, hr: 3600, minute: 60, min: 60, second: 1, sec: 1 };
+// Time words in English, German, Spanish, French and Italian
+const HOURS = 'hours?|hrs?|stunden?|std\\.?|horas?|heures?|ore|ora|h';
+const MINS = 'minutes?|mins?|minuten?|min\\.?|minutos?|minuti|minuto';
+const SECS = 'seconds?|secs?|sekunden?|sek\\.?|segundos?|secondes?|secondi|secondo';
+const unitSecs = u => /^(h|std|stund|ora|ore)/i.test(u) ? 3600 : /^min/i.test(u) ? 60 : 1;
 function durations(text) {
   const N = '(\\d+\\s?[½¼¾]|\\d+(?:[.,]\\d+)?|[½¼¾])';
-  const re = new RegExp(N + '(?:\\s*(?:–|-|to)\\s*' + N + ')?\\s*(hours?|hrs?|minutes?|mins?|seconds?|secs?)\\b(?:,?\\s*(?:and\\s+)?(\\d+)\\s*(?:minutes?|mins?)\\b)?', 'gi');
+  const re = new RegExp(N + '(?:\\s*(?:–|-|to|bis|a|à)\\s*' + N + ')?(?:\\s*derni[eè]re?s?)?\\s*(' + HOURS + '|' + MINS + '|' + SECS + ')(?![\\p{L}])(?:,?\\s*(?:and|und|y|et|e)?\\s*(\\d+)\\s*(?:' + MINS + ')(?![\\p{L}]))?', 'giu');
   const out = [];
   for (const m of text.matchAll(re)) {
     // A range like "8–10 minutes" starts at the shorter time; +1 min adds more if needed.
-    let secs = parseNum(m[1].replace(/\s/g, '')) * UNIT_SECS[m[3].toLowerCase().replace(/s$/, '')];
+    let secs = parseNum(m[1].replace(/\s/g, '')) * unitSecs(m[3]);
     if (m[4]) secs += Number(m[4]) * 60;
     if (secs >= 10 && secs <= 24 * 3600) out.push({ label: m[0].replace(/\s+/g, ' ').trim(), secs: Math.round(secs) });
   }
@@ -2484,12 +2541,12 @@ function goStep(d) {
 }
 function renderCook() {
   const { r, i } = cook, n = r.steps.length, step = r.steps[i];
-  cook.closeBtn = el('button', { class: 'btn small', onclick: () => closeCook() }, 'Close');
+  cook.closeBtn = el('button', { class: 'btn small', onclick: () => closeCook() }, tr('Close'));
   cook.armed = false;
   cook.el.replaceChildren(
     el('div', { class: 'cook-top' },
-      el('span', { class: 'cook-count', text: 'Step ' + (i + 1) + ' of ' + n }),
-      r.ingredients.length ? el('button', { class: 'btn small', onclick: cookIngredients }, 'Ingredients') : null,
+      el('span', { class: 'cook-count', text: tr('Step {i} of {n}', { i: i + 1, n }) }),
+      r.ingredients.length ? el('button', { class: 'btn small', onclick: cookIngredients }, tr('Ingredients')) : null,
       cook.closeBtn),
     el('div', { class: 'cook-bar' }, el('span', { style: 'width:' + ((i + 1) / n * 100) + '%' })),
     el('div', { class: 'cook-main' },
@@ -2497,25 +2554,25 @@ function renderCook() {
       el('span', { class: 'cook-num', text: String(i + 1).padStart(2, '0') }),
       el('p', { class: 'cook-step', text: step }),
       durations(step).map((d, j) => cook.timers.some(t => t.step === i && t.j === j) ? null
-        : el('button', { class: 'btn timer-start', onclick: () => startTimer(i, j, d) }, 'Start timer · ' + d.label)),
+        : el('button', { class: 'btn timer-start', onclick: () => startTimer(i, j, d) }, tr('Start timer') + ' · ' + d.label)),
       el('div', { class: 'timers', id: 'cook-timers' })),
     el('div', { class: 'cook-nav' },
-      el('button', { class: 'prev', disabled: i === 0 ? '' : null, onclick: () => goStep(-1) }, '← Back'),
-      el('button', { class: 'next', onclick: () => i === n - 1 ? finishCooking() : goStep(1) }, i === n - 1 ? 'Done ✓' : 'Next step →')));
+      el('button', { class: 'prev', disabled: i === 0 ? '' : null, onclick: () => goStep(-1) }, tr('← Back')),
+      el('button', { class: 'next', onclick: () => i === n - 1 ? finishCooking() : goStep(1) }, i === n - 1 ? tr('Done ✓') : tr('Next step →'))));
   renderTimers();
 }
 function finishCooking() {
   if (cook.timers.some(t => !t.done)) { closeCook(); return; }
   closeCook(true);
-  toast('Enjoy your meal!');
+  toast(tr('Enjoy your meal!'));
 }
 function closeCook(force) {
   if (!cook) return;
   if (!force && cook.timers.some(t => !t.done) && !cook.armed) {
     // Ask once before throwing away running timers
     cook.armed = true;
-    cook.closeBtn.textContent = 'Stop timers?'; cook.closeBtn.classList.add('danger');
-    setTimeout(() => { if (cook && cook.armed) { cook.armed = false; cook.closeBtn.textContent = 'Close'; cook.closeBtn.classList.remove('danger'); } }, 3000);
+    cook.closeBtn.textContent = tr('Stop timers?'); cook.closeBtn.classList.add('danger');
+    setTimeout(() => { if (cook && cook.armed) { cook.armed = false; cook.closeBtn.textContent = tr('Close'); cook.closeBtn.classList.remove('danger'); } }, 3000);
     return;
   }
   clearInterval(cook.tick);
@@ -2528,8 +2585,8 @@ function closeCook(force) {
 }
 function cookIngredients() {
   const r = cook.r, base = baseServings(r), f = base ? servings / base : 1;
-  openSheet('Ingredients',
-    base ? el('p', { class: 'note', text: 'For ' + servingLabel(r, servings).toLowerCase() + '.' }) : null,
+  openSheet(tr('Ingredients'),
+    base ? el('p', { class: 'note', text: tr('For {what}.', { what: lc(servingLabel(r, servings)) }) }) : null,
     el('ul', { class: 'ings' }, r.ingredients.map((t, i) => {
       const { qty, rest } = scaleLine(t, f);
       const box = el('input', { type: 'checkbox', id: 'cing-' + i });
@@ -2541,7 +2598,7 @@ function cookIngredients() {
 
 function startTimer(step, j, d) {
   unlockAudio();
-  const t = { id: String(Date.now()) + j, nid: Math.floor(Math.random() * 2e9), step, j, label: 'Step ' + (step + 1) + ' · ' + d.label, endsAt: Date.now() + d.secs * 1000, left: d.secs, running: true, done: false };
+  const t = { id: String(Date.now()) + j, nid: Math.floor(Math.random() * 2e9), step, j, label: tr('Step {i}', { i: step + 1 }) + ' · ' + d.label, endsAt: Date.now() + d.secs * 1000, left: d.secs, running: true, done: false };
   cook.timers.push(t);
   scheduleAlarm(t);
   renderCook();
@@ -2552,11 +2609,11 @@ function renderTimers() {
   if (!box) return;
   box.replaceChildren(...cook.timers.map(t => el('div', { class: 'timer' + (t.done ? ' done' : ''), 'data-id': t.id },
     el('span', { class: 't-label', text: t.label }),
-    el('span', { class: 't-time', text: t.done ? 'Done' : clock(timeLeft(t)) }),
+    el('span', { class: 't-time', text: t.done ? tr('Done') : clock(timeLeft(t)) }),
     t.done ? el('button', { class: 'btn small', onclick: () => dropTimer(t) }, 'OK') : [
-      el('button', { class: 'btn small', onclick: () => pauseTimer(t) }, t.running ? 'Pause' : 'Go'),
-      el('button', { class: 'btn small', 'aria-label': 'Add a minute', onclick: () => addMinute(t) }, '+1'),
-      el('button', { class: 'btn small', 'aria-label': 'Cancel timer', onclick: () => dropTimer(t) }, '×')])));
+      el('button', { class: 'btn small', onclick: () => pauseTimer(t) }, t.running ? tr('Pause') : tr('Go')),
+      el('button', { class: 'btn small', 'aria-label': tr('Add a minute'), onclick: () => addMinute(t) }, '+1'),
+      el('button', { class: 'btn small', 'aria-label': tr('Cancel timer'), onclick: () => dropTimer(t) }, '×')])));
 }
 function tickTimers() {
   if (!cook) return;
@@ -2564,7 +2621,7 @@ function tickTimers() {
   for (const t of cook.timers) {
     if (t.done) continue;
     const left = timeLeft(t);
-    if (t.running && left <= 0) { t.done = true; changed = true; toast('Timer done: ' + t.label); continue; }
+    if (t.running && left <= 0) { t.done = true; changed = true; toast(tr('Timer done: {what}', { what: t.label })); continue; }
     const node = cook.el.querySelector('.timer[data-id="' + t.id + '"] .t-time');
     if (node) node.textContent = clock(left);
   }
@@ -2625,7 +2682,7 @@ function scheduleAlarm(t) {
   const LN = NATIVE && NATIVE.LocalNotifications;
   if (!LN) return;
   LN.requestPermissions().then(() => LN.schedule({ notifications: [{
-    id: t.nid, title: 'Timer done', body: (cook ? cook.r.title + ' · ' : '') + t.label, schedule: { at: new Date(t.endsAt), allowWhileIdle: true }
+    id: t.nid, title: tr('Timer done'), body: (cook ? cook.r.title + ' · ' : '') + t.label, schedule: { at: new Date(t.endsAt), allowWhileIdle: true }
   }] })).catch(() => {});
 }
 function cancelAlarm(t) {
@@ -2638,7 +2695,7 @@ function cancelAlarm(t) {
 let plan = store.get('rr.plan', {});
 let weekOffset = 0, weekDay = '';
 const dayKey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-const fmtDay = (d, weekday) => d.toLocaleDateString('en-GB', { weekday: weekday || 'short', day: 'numeric', month: 'short' });
+const fmtDay = (d, weekday) => d.toLocaleDateString(LOCALES[lang], { weekday: weekday || 'short', day: 'numeric', month: 'short' });
 const planned = k => (plan[k] || []).map(x => all().find(r => key(r) === x)).filter(Boolean);
 function savePlan() {
   // Forget days more than two months old so the plan doesn't grow forever.
@@ -2649,17 +2706,17 @@ function savePlan() {
 
 function addToWeek(r) {
   const now = new Date();
-  const close = openSheet('Add to which day?', el('div', { class: 'daypick' }, [...Array(14)].map((_, i) => {
+  const close = openSheet(tr('Add to which day?'), el('div', { class: 'daypick' }, [...Array(14)].map((_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
     const k = dayKey(d), n = (plan[k] || []).length;
-    const name = i === 0 ? 'today' : i === 1 ? 'tomorrow' : d.toLocaleDateString('en-GB', { weekday: 'long' });
+    const name = i === 0 ? tr('today') : i === 1 ? tr('tomorrow') : d.toLocaleDateString(LOCALES[lang], { weekday: 'long' });
     return el('button', { onclick: async () => {
       const kept = await ensureSaved(r);
       if (!kept) return;
       plan[k] = (plan[k] || []).filter(x => x !== key(kept)).concat(key(kept));
       savePlan(); close();
-      toast('Added to ' + name);
-    } }, el('span', { text: (i < 2 ? name + ' · ' : '') + fmtDay(d) }), el('span', { class: 'row-meta', text: n ? n + ' planned' : '' }));
+      toast(tr('Added to {day}', { day: name }));
+    } }, el('span', { text: (i < 2 ? name + ' · ' : '') + fmtDay(d) }), el('span', { class: 'row-meta', text: n ? tr('{n} planned', { n }) : '' }));
   })));
 }
 function unplan(k, r) {
@@ -2673,39 +2730,39 @@ function renderWeek() {
   const days = [...Array(7)].map((_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
   const today = dayKey(now);
   const total = days.reduce((n, d) => n + planned(dayKey(d)).length, 0);
-  $('#week-title').textContent = weekOffset === 0 ? 'This week' : weekOffset === 1 ? 'Next week' : weekOffset === -1 ? 'Last week' : 'Week of ' + fmtDay(days[0], 'long');
-  $('#week-note').textContent = fmtDay(days[0]) + ' – ' + fmtDay(days[6]) + ' · ' + (total ? total + ' planned' : 'Nothing planned yet. Tap Add to week on any recipe.');
+  $('#week-title').textContent = weekOffset === 0 ? tr('This week') : weekOffset === 1 ? tr('Next week') : weekOffset === -1 ? tr('Last week') : tr('Week of {date}', { date: fmtDay(days[0], 'long') });
+  $('#week-note').textContent = fmtDay(days[0]) + ' – ' + fmtDay(days[6]) + ' · ' + (total ? tr('{n} planned', { n: total }) : tr('Nothing planned yet. Tap Add to week on any recipe.'));
   const day = weekDay && days.find(d => dayKey(d) === weekDay);
   if (day) {
     // One day, with big cards
     const k = dayKey(day), rs = planned(k);
     $('#week-days').replaceChildren(
-      el('div', { class: 'row-btns' }, el('button', { class: 'btn', onclick: () => { weekDay = ''; renderWeek(); } }, '← Whole week')),
+      el('div', { class: 'row-btns' }, el('button', { class: 'btn', onclick: () => { weekDay = ''; renderWeek(); } }, tr('← Whole week'))),
       el('section', { class: 'day' + (k === today ? ' today' : '') },
-        el('div', { class: 'day-head' }, el('span', { class: 'day-name', text: day.toLocaleDateString('en-GB', { weekday: 'long' }) }), el('span', { class: 'day-date', text: fmtDay(day) })),
-        rs.length ? null : el('p', { class: 'note', text: 'Nothing planned for this day yet.' })),
+        el('div', { class: 'day-head' }, el('span', { class: 'day-name', text: day.toLocaleDateString(LOCALES[lang], { weekday: 'long' }) }), el('span', { class: 'day-date', text: fmtDay(day) })),
+        rs.length ? null : el('p', { class: 'note', text: tr('Nothing planned for this day yet.') })),
       ...rs.map(r => el('article', { class: 'plan-card' },
         picture(r, 800, 500, '', ''),
         el('div', { class: 'card-body' },
           el('h2', { class: 'title', text: r.title }),
-          el('p', { class: 'row-meta', text: [r.category, fmtTime(r.minutes), r.diet].filter(Boolean).join(' · ') }),
+          el('p', { class: 'row-meta', text: [tr(r.category), fmtTime(r.minutes), r.diet ? tr(r.diet === 'vegan' ? 'Vegan' : 'Vegetarian') : ''].filter(Boolean).join(' · ') }),
           el('div', { class: 'row-btns' },
-            el('button', { class: 'btn primary', onclick: () => openRecipe(r) }, 'Open recipe'),
-            el('button', { class: 'btn', onclick: () => startCooking(r) }, 'Start cooking'),
-            el('button', { class: 'btn', onclick: () => unplan(k, r) }, 'Remove'))))));
+            el('button', { class: 'btn primary', onclick: () => openRecipe(r) }, tr('Open recipe')),
+            el('button', { class: 'btn', onclick: () => startCooking(r) }, tr('Start cooking')),
+            el('button', { class: 'btn', onclick: () => unplan(k, r) }, tr('Remove')))))));
     return;
   }
   weekDay = '';
   $('#week-days').replaceChildren(...days.map(d => {
     const k = dayKey(d), rs = planned(k);
     return el('section', { class: 'day' + (k === today ? ' today' : '') },
-      el('button', { class: 'day-head', 'aria-label': 'Show ' + fmtDay(d, 'long'), onclick: () => { weekDay = k; renderWeek(); window.scrollTo(0, 0); } },
-        el('span', { class: 'day-name', text: d.toLocaleDateString('en-GB', { weekday: 'long' }) }),
+      el('button', { class: 'day-head', 'aria-label': tr('Show {day}', { day: fmtDay(d, 'long') }), onclick: () => { weekDay = k; renderWeek(); window.scrollTo(0, 0); } },
+        el('span', { class: 'day-name', text: d.toLocaleDateString(LOCALES[lang], { weekday: 'long' }) }),
         el('span', { class: 'day-date', text: fmtDay(d).replace(/^\S+ /, '') }),
         el('span', { class: 'day-count', text: rs.length ? rs.length + ' →' : '→' })),
       rs.length
-        ? el('ul', { class: 'list' }, rs.map(r => recipeRow(r, el('button', { class: 'btn small', 'aria-label': 'Remove ' + r.title, onclick: () => unplan(k, r) }, '×'))))
-        : el('p', { class: 'note', text: 'Nothing planned.' }));
+        ? el('ul', { class: 'list' }, rs.map(r => recipeRow(r, el('button', { class: 'btn small', 'aria-label': tr('Remove {title}', { title: r.title }), onclick: () => unplan(k, r) }, '×'))))
+        : el('p', { class: 'note', text: tr('Nothing planned.') }));
   }));
 }
 
@@ -2715,7 +2772,7 @@ function openSheet(title, ...content) {
   const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
   const back = el('div', { class: 'sheet-back', onclick: e => { if (e.target === back) close(); } },
     el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
-      el('div', { class: 'sheet-head' }, el('h2', { text: title }), el('button', { class: 'btn small', onclick: () => close() }, 'Close')),
+      el('div', { class: 'sheet-head' }, el('h2', { text: title }), el('button', { class: 'btn small', onclick: () => close() }, tr('Close'))),
       ...content));
   document.body.append(back);
   document.addEventListener('keydown', onKey);
@@ -2726,12 +2783,12 @@ function openSheet(title, ...content) {
 function renderList() {
   const rs = mine().slice().sort((a, b) => a.title.localeCompare(b.title));
   $('#mine-count').textContent = rs.length;
-  $('#tally').textContent = all().length + ' recipes in the mix' + (rs.length ? ', ' + rs.length + ' of them yours.' : '.');
+  $('#tally').textContent = rs.length ? tr('{n} recipes in the mix, {m} of them yours.', { n: all().length, m: rs.length }) : tr('{n} recipes in the mix.', { n: all().length });
   $('#mine-empty').hidden = rs.length > 0;
-  $('#list').replaceChildren(...rs.map(r => recipeRow(r, el('button', { class: 'btn small', onclick: () => startEdit(r) }, 'Edit'), deleteButton(r))));
+  $('#list').replaceChildren(...rs.map(r => recipeRow(r, el('button', { class: 'btn small', onclick: () => startEdit(r) }, tr('Edit')), deleteButton(r))));
   const fs = all().filter(r => favs.has(key(r))).sort((a, b) => a.title.localeCompare(b.title));
   $('#fav-block').hidden = !fs.length;
-  $('#fav-list').replaceChildren(...fs.map(r => recipeRow(r, el('button', { class: 'btn small', onclick: () => toggleFav(r) }, 'Remove'))));
+  $('#fav-list').replaceChildren(...fs.map(r => recipeRow(r, el('button', { class: 'btn small', onclick: () => toggleFav(r) }, tr('Remove')))));
 }
 
 const openRecipe = r => { showRecipe(r); setView('shuffle'); window.scrollTo(0, 0); };
@@ -2741,17 +2798,17 @@ function recipeRow(r, ...actions) {
       picture(r, 120, 120, 'thumb', ''),
       el('span', { class: 'row-text' },
         el('span', { class: 'row-title', text: r.title }),
-        el('span', { class: 'row-meta', text: [r.category, fmtTime(r.minutes)].filter(Boolean).join(' · ') }))),
+        el('span', { class: 'row-meta', text: [tr(r.category), fmtTime(r.minutes)].filter(Boolean).join(' · ') }))),
     actions.length ? el('div', { class: 'row-actions' }, actions) : null);
 }
 
 function deleteButton(r) {
   let armed = false, timer = null;
-  const b = el('button', { class: 'btn small', 'aria-label': 'Delete ' + r.title }, 'Delete');
+  const b = el('button', { class: 'btn small', 'aria-label': tr('Delete {title}', { title: r.title }) }, tr('Delete'));
   b.addEventListener('click', async () => {
     if (!armed) {
-      armed = true; b.textContent = 'Confirm'; b.classList.add('danger');
-      timer = setTimeout(() => { armed = false; b.textContent = 'Delete'; b.classList.remove('danger'); }, 3000);
+      armed = true; b.textContent = tr('Confirm'); b.classList.add('danger');
+      timer = setTimeout(() => { armed = false; b.textContent = tr('Delete'); b.classList.remove('danger'); }, 3000);
       return;
     }
     clearTimeout(timer); b.disabled = true;
@@ -2760,16 +2817,16 @@ function deleteButton(r) {
       if (r.photo) await dropPhoto(r.photo);
       myRecipes = myRecipes.filter(x => x.id !== r.id);
       onRecipesChanged();
-      toast('Deleted “' + r.title + '”');
-    } catch (e) { b.disabled = false; toast('Couldn’t delete that recipe. Try again.'); }
+      toast(tr('Deleted “{title}”', { title: r.title }));
+    } catch (e) { b.disabled = false; toast(tr('Couldn’t delete that recipe. Try again.')); }
   });
   return b;
 }
 
 function renderNote() {
   $('#store-note').textContent = storageOK
-    ? 'Saved on this phone. Make a backup now and then from Settings.'
-    : 'This browser isn’t letting the app save, so recipes added now disappear when you close it. Private browsing can cause this.';
+    ? tr('Saved on this phone. Make a backup now and then from Settings.')
+    : tr('This browser isn’t letting the app save, so recipes added now disappear when you close it. Private browsing can cause this.');
   renderList();
 }
 
@@ -2790,7 +2847,7 @@ function setPhotoPreview(src) {
   const img = $('#photo-preview');
   img.hidden = !src; if (src) img.src = src; else img.removeAttribute('src');
   $('#photo-remove').hidden = !src;
-  $('#photo-label').textContent = src ? 'Change photo' : 'Add a photo';
+  $('#photo-label').textContent = src ? tr('Change photo') : tr('Add a photo');
 }
 function clearPhoto() { if (photo.preview) URL.revokeObjectURL(photo.preview); photo = { blob: null, preview: '', remove: false }; $('#f-photo').value = ''; }
 async function compress(file) {
@@ -2812,11 +2869,11 @@ $('#f-photo').addEventListener('change', async e => {
     clearPhoto();
     photo.blob = blob; photo.preview = URL.createObjectURL(blob);
     setPhotoPreview(photo.preview);
-  } catch (err) { toast('That photo couldn’t be read. Try a different one.'); }
+  } catch (err) { toast(tr('That photo couldn’t be read. Try a different one.')); }
 });
 $('#photo-remove').addEventListener('click', () => { clearPhoto(); photo.remove = true; setPhotoPreview(''); });
 
-function fillCategoryOptions() { $('#f-category').replaceChildren(...CATS.map(c => el('option', { value: c }, c))); $('#f-category').value = 'Dinner'; }
+function fillCategoryOptions() { $('#f-category').replaceChildren(...CATS.map(c => el('option', { value: c }, tr(c)))); $('#f-category').value = 'Dinner'; }
 function resetForm() {
   ['#f-title', '#f-minutes', '#f-serves', '#f-ingredients', '#f-steps', '#f-notes'].forEach(s => $(s).value = '');
   $('#f-category').value = 'Dinner';
@@ -2831,15 +2888,15 @@ function startAdd() {
   $('#import-panel').hidden = false;
   $('#import-panel').open = false;
   $('#import-error').hidden = true;
-  $('#form-heading').textContent = 'New recipe';
-  $('#save-btn').textContent = 'Save recipe';
+  $('#form-heading').textContent = tr('New recipe');
+  $('#save-btn').textContent = tr('Save recipe');
   setView('add');
 }
 function startEdit(r) {
   editing = r; resetForm();
   $('#import-panel').hidden = true;
-  $('#form-heading').textContent = 'Edit recipe';
-  $('#save-btn').textContent = 'Save changes';
+  $('#form-heading').textContent = tr('Edit recipe');
+  $('#save-btn').textContent = tr('Save changes');
   fillForm(r, r.notes);
   if (r.photo) photoURL(r.photo).then(u => { if (u && editing === r) setPhotoPreview(u); });
   setView('add');
@@ -2860,7 +2917,7 @@ function fillImported(r, link) {
   clearImport();
   $('#import-panel').open = false;
   $('#form').scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
-  toast('Imported. Check it over, then tap Save.');
+  toast(tr('Imported. Check it over, then tap Save.'));
 }
 const lines = s => s.split('\n').map(l => l.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, '').trim()).filter(Boolean);
 
@@ -2879,8 +2936,8 @@ async function saveForm(e) {
     art: editing ? editing.art || null : importedArt,
     photo: editing ? editing.photo || '' : ''
   };
-  if (!data.title) { err.textContent = 'Give the recipe a name.'; err.hidden = false; $('#f-title').focus(); return; }
-  if (!data.ingredients.length) { err.textContent = 'Add at least one ingredient, one per line.'; err.hidden = false; $('#f-ingredients').focus(); return; }
+  if (!data.title) { err.textContent = tr('Give the recipe a name.'); err.hidden = false; $('#f-title').focus(); return; }
+  if (!data.ingredients.length) { err.textContent = tr('Add at least one ingredient, one per line.'); err.hidden = false; $('#f-ingredients').focus(); return; }
   err.hidden = true;
   $('#save-btn').disabled = true;
 
@@ -2891,12 +2948,12 @@ async function saveForm(e) {
     if (photo.blob && storageOK) data.photo = await savePhoto(photo.blob);
     k = await persist(data, editing);
   } catch (ex) {
-    err.textContent = 'Couldn’t save on this phone. Its storage may be full.'; err.hidden = false;
+    err.textContent = tr('Couldn’t save on this phone. Its storage may be full.'); err.hidden = false;
     $('#save-btn').disabled = false; return;
   }
   if (oldPhoto && oldPhoto !== data.photo) dropPhoto(oldPhoto);
 
-  toast(editing ? 'Changes saved' : 'Recipe saved');
+  toast(editing ? tr('Changes saved') : tr('Recipe saved'));
   editing = null; resetForm();
   const saved = all().find(x => key(x) === k);
   if (saved) showRecipe(saved);
@@ -2913,11 +2970,11 @@ const IMPORT_SCHEMA = {
   properties: { found: { type: 'boolean' }, problem: { type: 'string' }, recipe: RECIPE_SCHEMA }
 };
 const FETCH_ERRORS = {
-  url_not_accessible: 'That page couldn’t be opened. Some sites block apps from reading them. Copy the recipe text and paste it here instead.',
-  url_not_allowed: 'That site doesn’t allow apps to read it. Copy the recipe text and paste it here instead.',
-  unsupported_content_type: 'That link isn’t a page Claude can read. Try the recipe page itself, or paste the text.',
-  content_too_large: 'That page is too big to read. Copy just the recipe and paste it here instead.',
-  url_too_long: 'That link is too long. Try a shorter link to the recipe page.'
+  url_not_accessible: tr('That page couldn’t be opened. Some sites block apps from reading them. Copy the recipe text and paste it here instead.'),
+  url_not_allowed: tr('That site doesn’t allow apps to read it. Copy the recipe text and paste it here instead.'),
+  unsupported_content_type: tr('That link isn’t a page Claude can read. Try the recipe page itself, or paste the text.'),
+  content_too_large: tr('That page is too big to read. Copy just the recipe and paste it here instead.'),
+  url_too_long: tr('That link is too long. Try a shorter link to the recipe page.')
 };
 
 function openImport() {
@@ -2932,8 +2989,8 @@ function startImport() {
 }
 function renderShots() {
   $('#import-shots').replaceChildren(...shots.map((s, i) => el('div', { class: 'shot' },
-    el('img', { src: s.url, alt: 'Screenshot ' + (i + 1) }),
-    el('button', { type: 'button', 'aria-label': 'Remove screenshot ' + (i + 1), onclick: () => { URL.revokeObjectURL(s.url); shots.splice(i, 1); renderShots(); } }, '×'))));
+    el('img', { src: s.url, alt: tr('Screenshot {n}', { n: i + 1 }) }),
+    el('button', { type: 'button', 'aria-label': tr('Remove screenshot {n}', { n: i + 1 }), onclick: () => { URL.revokeObjectURL(s.url); shots.splice(i, 1); renderShots(); } }, '×'))));
   $('#import-files').disabled = shots.length >= MAX_SHOTS;
 }
 function clearImport() {
@@ -2963,7 +3020,7 @@ function parseLoose(blocks) {
 
 // The request for reading a recipe; `chat` words it for Claude chat instead of the API.
 function importPrompt(link, extra, nShots, chat) {
-  const prompt = 'Turn the recipe below into a clean recipe for a home cook’s recipe box.' +
+  let prompt = 'Turn the recipe below into a clean recipe for a home cook’s recipe box.' +
     (link ? (chat ? '\nOpen this page and read the recipe on it: ' : '\nUse the web_fetch tool to open this page and read the recipe on it: ') + link + '\nIf it is a video page, the recipe is usually written in the description.' : '') +
     (extra.length > 2 ? '\nHere is the text they pasted:\n"""\n' + extra + '\n"""' : '') +
     (nShots ? '\nThe attached ' + (nShots > 1 ? nShots + ' images show' : 'image shows') + ' the recipe.' : '') +
@@ -2972,6 +3029,7 @@ function importPrompt(link, extra, nShots, chat) {
     '\n"minutes" is the total time and "serves" the number of servings; estimate them if the recipe doesn’t say. Pick the category that fits best.' +
     '\nIn "art", choose what the dish is served in and 2 to 4 hex colours of its most visible ingredients, for a simple illustration.' +
     '\nIf there is no recipe to read (the page didn’t load, the video has no written recipe, or the image isn’t a recipe), set "found" to false, explain why in "problem" in one short sentence, and fill "recipe" with placeholders. Otherwise set "found" to true and "problem" to an empty string.';
+  prompt += langLine();
   const shape = '\nReply with only a JSON object in this shape: {"found": true, "problem": "", "recipe": {"title": "...", "category": "Breakfast" | "Lunch" | "Dinner" | "Dessert" | "Snack", "minutes": 30, "serves": 4, "ingredients": ["..."], "steps": ["..."], "notes": "", "diet": "" | "vegetarian" | "vegan", "art": {"s": "plate" | "bowl" | "pan" | "tray" | "board" | "pizza" | "jar" | "mug", "b": "#hex", "c": ["#hex", "#hex"], "h": "#hex"}}}';
   return { prompt, shape };
 }
@@ -2982,13 +3040,13 @@ function splitImportText(text) {
 function importViaChat() {
   const text = $('#import-text').value.trim();
   const err = $('#import-error');
-  if (!text && !shots.length) { err.textContent = 'Paste a link or the recipe text first.'; err.hidden = false; return; }
+  if (!text && !shots.length) { err.textContent = tr('Paste a link or the recipe text first.'); err.hidden = false; return; }
   err.hidden = true;
   const { link, extra } = splitImportText(text);
   const { prompt, shape } = importPrompt(link, extra, shots.length, true);
   askInChat(prompt + shape + '\nReply with the JSON only.');
   $('#import-text').value = '';
-  toast(shots.length ? 'Attach your screenshots in Claude, then paste its reply here' : 'Paste Claude’s reply here, then tap Import recipe');
+  toast(shots.length ? tr('Attach your screenshots in Claude, then paste its reply here') : tr('Paste Claude’s reply here, then tap Import recipe'));
 }
 
 async function importRecipe() {
@@ -2998,9 +3056,9 @@ async function importRecipe() {
   // A reply pasted from Claude chat is read right here, no API needed.
   const pasted = text.includes('{') && recipeFromText(text);
   if (pasted) { err.hidden = true; fillImported(normalize('x', pasted, 'mine'), ''); return; }
-  if (!apiKey) { openImport(); err.textContent = 'Without an API key, tap Ask in Claude chat, then paste Claude’s reply here.'; err.hidden = false; return; }
+  if (!apiKey) { openImport(); err.textContent = tr('Without an API key, tap Ask in Claude chat, then paste Claude’s reply here.'); err.hidden = false; return; }
   const { link, extra } = splitImportText(text);
-  if (!text && !shots.length) { err.textContent = 'Paste a link or the recipe text, or add a screenshot.'; err.hidden = false; return; }
+  if (!text && !shots.length) { err.textContent = tr('Paste a link or the recipe text, or add a screenshot.'); err.hidden = false; return; }
 
   const { prompt, shape } = importPrompt(link, extra, shots.length, false);
 
@@ -3036,7 +3094,7 @@ async function importRecipe() {
     const fetchErr = blocks.find(b => b.type === 'web_fetch_tool_result' && b.content && b.content.type === 'web_fetch_tool_result_error');
     if (!out || out.found === false || !out.recipe) {
       const code = fetchErr && fetchErr.content.error_code;
-      throw { code: 'import', message: FETCH_ERRORS[code] || (out && out.problem ? 'Claude couldn’t find a recipe there: ' + out.problem : 'Claude couldn’t find a recipe there. Try pasting the recipe text instead.') };
+      throw { code: 'import', message: FETCH_ERRORS[code] || (out && out.problem ? tr('Claude couldn’t find a recipe there: {why}', { why: out.problem }) : tr('Claude couldn’t find a recipe there. Try pasting the recipe text instead.')) };
     }
     const r = normalize('x', out.recipe, 'mine');
     if (!r.ingredients.length && !r.steps.length) throw { code: 'garbled' };
@@ -3058,14 +3116,14 @@ $('#import-paste').addEventListener('click', async () => {
   try {
     const t = await navigator.clipboard.readText();
     if (t) { $('#import-text').value = t.slice(0, 20000); $('#import-error').hidden = true; }
-  } catch (e) { $('#import-text').focus(); toast('Tap and hold in the box, then choose Paste.'); }
+  } catch (e) { $('#import-text').focus(); toast(tr('Tap and hold in the box, then choose Paste.')); }
 });
 $('#import-files').addEventListener('change', async e => {
   const files = Array.from(e.target.files || []).slice(0, MAX_SHOTS - shots.length);
   e.target.value = '';
   for (const f of files) {
     try { const blob = await compress(f); shots.push({ blob, url: URL.createObjectURL(blob) }); }
-    catch (ex) { toast('One of those images couldn’t be read.'); }
+    catch (ex) { toast(tr('One of those images couldn’t be read.')); }
   }
   renderShots();
   if (files.length) $('#import-error').hidden = true;
@@ -3098,8 +3156,8 @@ async function loadRecipes() {
 const blobToDataURL = b => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error); fr.readAsDataURL(b); });
 async function exportBackup() {
   const status = $('#backup-status');
-  if (!myRecipes.length && !favs.size && !Object.keys(plan).length) { status.textContent = 'Nothing to back up yet. Add a recipe first.'; return; }
-  status.textContent = 'Preparing your backup…';
+  if (!myRecipes.length && !favs.size && !Object.keys(plan).length) { status.textContent = tr('Nothing to back up yet. Add a recipe first.'); return; }
+  status.textContent = tr('Preparing your backup…');
   const photos = {};
   for (const r of myRecipes) {
     if (!r.photo) continue;
@@ -3109,25 +3167,25 @@ async function exportBackup() {
   const json = JSON.stringify({ app: 'recipe-roulette', version: 2, exportedAt: new Date().toISOString(), recipes: myRecipes.map(stored), photos, favs: [...favs], plan });
   const name = 'recipe-roulette-backup-' + new Date().toISOString().slice(0, 10) + '.json';
   const file = new File([json], name, { type: 'application/json' });
-  const summary = myRecipes.length + (myRecipes.length === 1 ? ' recipe' : ' recipes') + ', your favourites and week plan';
+  const summary = myRecipes.length === 1 ? tr('1 recipe, your favourites and week plan') : tr('{n} recipes, your favourites and week plan', { n: myRecipes.length });
   if (NATIVE && NATIVE.Filesystem && NATIVE.Share) {
     // In the store app the backup goes through the share sheet (Files, iCloud Drive, Google Drive, email…)
     try {
       const { uri } = await NATIVE.Filesystem.writeFile({ path: name, data: json, directory: 'CACHE', encoding: 'utf8' });
       await NATIVE.Share.share({ title: 'Recipe Roulette backup', files: [uri] });
-      status.textContent = 'Backed up ' + summary + '.';
-    } catch (e) { status.textContent = /cancel/i.test(e && e.message) ? '' : 'Couldn’t make the backup. Try again.'; }
+      status.textContent = tr('Backed up {what}.', { what: summary });
+    } catch (e) { status.textContent = /cancel/i.test(e && e.message) ? '' : tr('Couldn’t make the backup. Try again.'); }
     return;
   }
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: 'Recipe Roulette backup' }); status.textContent = 'Backed up ' + summary + '.'; return; }
+    try { await navigator.share({ files: [file], title: 'Recipe Roulette backup' }); status.textContent = tr('Backed up {what}.', { what: summary }); return; }
     catch (e) { if (e && e.name === 'AbortError') { status.textContent = ''; return; } }
   }
   const url = URL.createObjectURL(file);
   const a = el('a', { href: url, download: name });
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
-  status.textContent = 'Saved a backup of ' + summary + ' as ' + name + '.';
+  status.textContent = tr('Saved a backup of {what} as {file}.', { what: summary, file: name });
 }
 async function importBackup(file) {
   const status = $('#backup-status');
@@ -3162,9 +3220,9 @@ async function importBackup(file) {
     }
     onRecipesChanged();
     if (current) showRecipe(current, true);
-    status.textContent = count ? 'Restored ' + count + (count === 1 ? ' recipe' : ' recipes') + ', favourites and week plan.' : 'Restored your favourites and week plan.';
+    status.textContent = count ? (count === 1 ? tr('Restored 1 recipe, favourites and week plan.') : tr('Restored {n} recipes, favourites and week plan.', { n: count })) : tr('Restored your favourites and week plan.');
   } catch (e) {
-    status.textContent = 'That file isn’t a Recipe Roulette backup.';
+    status.textContent = tr('That file isn’t a Recipe Roulette backup.');
   }
 }
 
@@ -3175,36 +3233,47 @@ function renderKey() {
   $('#key-test').disabled = !apiKey;
   const st = $('#key-status');
   st.className = 'note';
-  st.textContent = apiKey ? 'Key saved on this phone (ends in …' + apiKey.slice(-4) + ').' : 'No key yet. Everything except New idea works without one.';
+  st.textContent = apiKey ? tr('Key saved on this phone (ends in …{last}).', { last: apiKey.slice(-4) }) : tr('No key yet. Everything except New idea works without one.');
 }
 $('#key-show').addEventListener('click', () => {
   const f = $('#f-key'), show = f.type === 'password';
   f.type = show ? 'text' : 'password';
-  $('#key-show').textContent = show ? 'Hide' : 'Show';
+  $('#key-show').textContent = show ? tr('Hide') : tr('Show');
 });
 $('#key-save').addEventListener('click', () => {
   const v = $('#f-key').value.trim(), st = $('#key-status');
   st.className = 'note';
-  if (!v) { st.textContent = 'Paste your key into the box first.'; return; }
-  if (!/^sk-ant-/.test(v)) { st.textContent = 'That doesn’t look like a Claude API key. Keys start with “sk-ant-”.'; return; }
-  apiKey = v; store.set('rr.apiKey', v); renderKey(); toast('Key saved');
+  if (!v) { st.textContent = tr('Paste your key into the box first.'); return; }
+  if (!/^sk-ant-/.test(v)) { st.textContent = tr('That doesn’t look like a Claude API key. Keys start with “sk-ant-”.'); return; }
+  apiKey = v; store.set('rr.apiKey', v); renderKey(); toast(tr('Key saved'));
 });
-$('#key-remove').addEventListener('click', () => { apiKey = ''; try { localStorage.removeItem('rr.apiKey'); } catch (e) {} renderKey(); toast('Key removed from this phone'); });
+$('#key-remove').addEventListener('click', () => { apiKey = ''; try { localStorage.removeItem('rr.apiKey'); } catch (e) {} renderKey(); toast(tr('Key removed from this phone')); });
 $('#key-test').addEventListener('click', async () => {
   const st = $('#key-status'), b = $('#key-test');
-  b.disabled = true; st.className = 'note'; st.textContent = 'Checking…';
+  b.disabled = true; st.className = 'note'; st.textContent = tr('Checking…');
   try {
     await callClaude({ max_tokens: 1024, output_config: { effort: 'low' }, messages: [{ role: 'user', content: 'Reply with the single word OK.' }] });
-    st.className = 'note ok'; st.textContent = 'Your key works. New ideas are ready to go.';
+    st.className = 'note ok'; st.textContent = tr('Your key works. New ideas are ready to go.');
   } catch (e) { st.textContent = friendlyError(e); }
   finally { b.disabled = !apiKey; }
 });
-$('#export-btn').addEventListener('click', () => { exportBackup().catch(() => { $('#backup-status').textContent = 'Couldn’t make the backup. Try again.'; }); });
+$('#export-btn').addEventListener('click', () => { exportBackup().catch(() => { $('#backup-status').textContent = tr('Couldn’t make the backup. Try again.'); }); });
 $('#import-file').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) importBackup(f); e.target.value = ''; });
+$('#f-lang').addEventListener('change', e => {
+  store.set('rr.lang', e.target.value);
+  // Reload in the new language, staying on the same recipe
+  try { sessionStorage.setItem('rr.resume', JSON.stringify({ view: 'shuffle', recipe: currentJSON, servings, checked: [...checked], awake: wantAwake, y: 0, quiet: true })); } catch (err) {}
+  location.reload();
+});
+function renderLangPicker() {
+  $('#f-lang').replaceChildren(el('option', { value: 'auto' }, tr('Automatic (phone language)')),
+    ...Object.entries(LANGS).map(([code, name]) => el('option', { value: code }, name)));
+  $('#f-lang').value = langSetting;
+}
 $('#credits-btn').addEventListener('click', () => {
   // Every built-in photo is from Wikimedia Commons under a free licence that asks for this credit.
-  openSheet('Photo credits',
-    el('p', { class: 'note', text: 'Photos from Wikimedia Commons, cropped to fit. Tap one to see the original and its licence.' }),
+  openSheet(tr('Photo credits'),
+    el('p', { class: 'note', text: tr('Photos from Wikimedia Commons, cropped to fit. Tap one to see the original and its licence.') }),
     el('ul', { class: 'list' }, classics.filter(r => PHOTO_CREDITS[r.id]).map(r => {
       const [who, lic, url] = PHOTO_CREDITS[r.id];
       return el('li', { class: 'row' }, el('a', { class: 'row-main', href: url, target: '_blank', rel: 'noopener', style: 'color:inherit;text-decoration:none' },
@@ -3239,13 +3308,13 @@ async function setAwake(on) {
     try {
       wakeLock = await navigator.wakeLock.request('screen');
       wakeLock.addEventListener('release', () => { wakeLock = null; });
-    } catch (e) { wantAwake = false; toast('This browser won’t keep the screen on.'); }
+    } catch (e) { wantAwake = false; toast(tr('This browser won’t keep the screen on.')); }
   } else {
     try { if (wakeLock) await wakeLock.release(); } catch (e) {}
     wakeLock = null;
   }
   const b = $('#awake-btn');
-  if (b) { b.setAttribute('aria-pressed', String(wantAwake)); b.textContent = wantAwake ? 'Screen stays on' : 'Keep screen on'; }
+  if (b) { b.setAttribute('aria-pressed', String(wantAwake)); b.textContent = wantAwake ? tr('Screen stays on') : tr('Keep screen on'); }
 }
 document.addEventListener('visibilitychange', () => {
   if (wantAwake && !wakeLock && document.visibilityState === 'visible') setAwake(true);
@@ -3295,6 +3364,7 @@ function resumeAfterUpdate() {
   if (!s || !s.recipe) return false;
   const saved = JSON.parse(s.recipe);
   showRecipe(all().find(r => key(r) === key(saved)) || saved);
+  if (current && current.src === 'classic') currentJSON = JSON.stringify(current);
   servings = s.servings || servings;
   checked = new Set(s.checked || []);
   showRecipe(current, true);
@@ -3302,7 +3372,7 @@ function resumeAfterUpdate() {
   setView(['mine', 'week'].includes(s.view) ? s.view : 'shuffle');
   requestAnimationFrame(() => window.scrollTo(0, s.y || 0));
   if (s.awake && 'wakeLock' in navigator) setAwake(true);
-  toast('App updated');
+  if (!s.quiet) toast(tr('App updated'));
   return true;
 }
 
@@ -3314,10 +3384,12 @@ function toast(msg) {
   toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
 }
 
-const hour = new Date().getHours();
-$('#hello').textContent = hour >= 5 && hour < 11 ? 'Good morning. Fancy some breakfast?'
-  : hour < 15 ? 'Good afternoon. What’s for lunch?'
-  : hour < 22 ? 'Good evening. What’s for dinner?' : 'Late-night snack, anyone?';
+function greet() {
+  const hour = new Date().getHours();
+  $('#hello').textContent = hour >= 5 && hour < 11 ? tr('Good morning. Fancy some breakfast?')
+  : hour < 15 ? tr('Good afternoon. What’s for lunch?')
+  : hour < 22 ? tr('Good evening. What’s for dinner?') : tr('Late-night snack, anyone?');
+}
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => t.dataset.view === 'add' ? startAdd() : setView(t.dataset.view)));
 $('#shuffle-btn').addEventListener('click', shuffle);
@@ -3355,15 +3427,23 @@ $('#mine-empty-add').addEventListener('click', startAdd);
 $('#form').addEventListener('submit', saveForm);
 $('#cancel-btn').addEventListener('click', () => { editing = null; resetForm(); setView(prevView === 'add' ? 'shuffle' : prevView); });
 
-fillCategoryOptions();
-renderFilters();
-renderKey();
-renderSpend();
-renderNote();
-if (!resumeAfterUpdate() && !openSharedLink()) shuffle();
-window.addEventListener('hashchange', () => { if (openSharedLink()) { setView('shuffle'); window.scrollTo(0, 0); } });
-loadRecipes();
-watchForUpdates();
+async function start() {
+  await loadLanguage();
+  buildClassics();
+  translatePage();
+  greet();
+  renderLangPicker();
+  fillCategoryOptions();
+  renderFilters();
+  renderKey();
+  renderSpend();
+  renderNote();
+  if (!resumeAfterUpdate() && !openSharedLink()) shuffle();
+  window.addEventListener('hashchange', () => { if (openSharedLink()) { setView('shuffle'); window.scrollTo(0, 0); } });
+  loadRecipes();
+  watchForUpdates();
+}
+start();
 </script>
 </body>
 </html>
